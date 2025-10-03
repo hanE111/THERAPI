@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import pandas as pd
 
 import torch
@@ -29,25 +30,27 @@ def train_aligner(args):
     gdsc_data_dir = os.path.join(args.data_dir, 'GDSC_gex.csv')
     gdsc_info_dir = os.path.join(args.data_dir, 'GDSC_info.csv')
 
-    tcga_unlabeled_data_dir = os.path.join(args.data_dir, 'TCGA_unlabeled_gex.csv')
-    tcga_unlabeled_info_dir = os.path.join(args.data_dir, 'TCGA_unlabeled_info.csv')
+    pdx_data_dir = os.path.join(args.data_dir, 'PDX_gex.csv')
+    pdx_info_dir = os.path.join(args.data_dir, 'PDX_info.csv')
 
     gdsc_data_df = pd.read_csv(gdsc_data_dir, index_col=0)
     gdsc_info_df = pd.read_csv(gdsc_info_dir)
-    num_tissue = len(gdsc_info_df['tissue_label'].unique())
+    num_tissue = gdsc_info_df['tissue_label'].nunique()
 
-    tcga_unlabeled_data_df = pd.read_csv(tcga_unlabeled_data_dir, index_col=0)
-    tcga_unlabeled_info_df = pd.read_csv(tcga_unlabeled_info_dir)
+    pdx_data_df = pd.read_csv(pdx_data_dir, index_col=0)
+    pdx_info_df = pd.read_csv(pdx_info_dir)
+
+    gdsc_data_df = gdsc_data_df.loc[:, pdx_data_df.columns]
 
     gdsc_dataset = AlignerDataset(gdsc_data_df, 'gdsc', gdsc_info_df['tissue_label'])
-    tcga_unlabeled_dataset = AlignerDataset(tcga_unlabeled_data_df, 'tcga', tcga_unlabeled_info_df['tissue_label'])
-    tcga_unlabeled_dataloader = DataLoader(tcga_unlabeled_dataset, batch_size=batch_size, shuffle=True, drop_last=False, generator = torch.Generator().manual_seed(args.seed))
+    pdx_dataset = AlignerDataset(pdx_data_df, 'pdx', pdx_info_df['tissue_label'])
+    pdx_dataloader = DataLoader(pdx_dataset, batch_size=batch_size, shuffle=True, drop_last=False, generator = torch.Generator().manual_seed(args.seed))
 
     # model
     gdsc_AE = GDSC_AE(n_genes=gdsc_dataset.n_genes, n_classes=num_tissue, n_latent=dim_latent)
-    tcga_weightencoder = TCGA_weightencoder(n_genes=tcga_unlabeled_dataset.n_genes, n_latent=dim_latent, n_celines=gdsc_data_df.shape[0])
+    tcga_weightencoder = TCGA_weightencoder(n_genes=pdx_dataset.n_genes, n_latent=dim_latent, n_celines=gdsc_data_df.shape[0])
     emb_dis_classifier = Emb_Dis_classifier(n_latent=dim_latent, n_classes=num_tissue)
-    exp_dis_classifier = Exp_Dis_classifier(n_genes=tcga_unlabeled_dataset.n_genes, n_latent=dim_latent, n_classes=num_tissue)
+    exp_dis_classifier = Exp_Dis_classifier(n_genes=pdx_dataset.n_genes, n_latent=dim_latent, n_classes=num_tissue)
     gdsc_AE.to(args.device)
     tcga_weightencoder.to(args.device)
     emb_dis_classifier.to(args.device)
@@ -56,13 +59,18 @@ def train_aligner(args):
     autoencoder_criterion = nn.MSELoss()
     center_criterion = CenterLoss(num_classes=num_tissue, feat_dim=dim_latent, device=args.device)
     classifier_criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(list(gdsc_AE.parameters())+list(tcga_weightencoder.parameters())+list(emb_dis_classifier.parameters())+list(exp_dis_classifier.parameters()), lr=lr)
+    joint_params = (
+        parameter
+        for module in (gdsc_AE, tcga_weightencoder, emb_dis_classifier, exp_dis_classifier)
+        for parameter in module.parameters()
+    )
+    optimizer = torch.optim.Adam(joint_params, lr=lr)
 
     if not os.path.exists('ckpts'):
         os.makedirs('ckpts', exist_ok=True)
 
     # training
-    for epoch in range(199):
+    for epoch in np.arange(args.epochs, dtype=np.int64):
         gdsc_AE.train()
         tcga_weightencoder.train()
         emb_dis_classifier.train()
@@ -71,9 +79,10 @@ def train_aligner(args):
         train_losses = 0
         g_losses = 0
         t_losses = 0
-        for tcga_gex, _, tcga_dis_label in tcga_unlabeled_dataloader:
-            tcga_gex = tcga_gex.to(args.device)
-            tcga_dis_label = tcga_dis_label.to(args.device)
+        batch_count = 0
+        for pdx_gex, _, pdx_dis_label in pdx_dataloader:
+            pdx_gex = pdx_gex.to(args.device)
+            pdx_dis_label = pdx_dis_label.to(args.device)
 
             gdsc_gex = gdsc_dataset.data.to(args.device)
             gdsc_dis_label = gdsc_dataset.dis_label.to(args.device)
@@ -90,14 +99,14 @@ def train_aligner(args):
             G_losses = loss_a*Grecon_loss + loss_b*Gcenter_loss + loss_c*(Gclass_loss_emb + Gclass_loss_exp) 
 
             # TCGA loss
-            tcga_weights, tcga_latent, tcga_wgex, tcga_recon = tcga_weightencoder(tcga_gex, gdsc_z, gdsc_gex)
+            tcga_weights, tcga_latent, tcga_wgex, tcga_recon = tcga_weightencoder(pdx_gex, gdsc_z, gdsc_gex)
             tcga_emb_dis_pred = emb_dis_classifier(tcga_latent)
             tcga_exp_dis_pred = exp_dis_classifier(tcga_wgex)
 
-            Trecon_loss = autoencoder_criterion(tcga_recon, tcga_gex)        
-            Tcenter_loss = center_criterion(tcga_latent, tcga_dis_label)
-            Tclass_loss_emb = classifier_criterion(tcga_emb_dis_pred, tcga_dis_label)
-            Tclass_loss_exp = classifier_criterion(tcga_exp_dis_pred, tcga_dis_label)
+            Trecon_loss = autoencoder_criterion(tcga_recon, pdx_gex)        
+            Tcenter_loss = center_criterion(tcga_latent, pdx_dis_label)
+            Tclass_loss_emb = classifier_criterion(tcga_emb_dis_pred, pdx_dis_label)
+            Tclass_loss_exp = classifier_criterion(tcga_exp_dis_pred, pdx_dis_label)
             T_losses = loss_a*Trecon_loss + loss_b*Tcenter_loss + loss_c*(Tclass_loss_emb + Tclass_loss_exp)
 
             # update
@@ -109,11 +118,14 @@ def train_aligner(args):
             train_losses += total_losses.item()
             g_losses += G_losses.item()
             t_losses += T_losses.item()
+            batch_count += 1
 
-        train_losses /= len(tcga_unlabeled_dataloader)
-        g_losses /= len(tcga_unlabeled_dataloader)
-        t_losses /= len(tcga_unlabeled_dataloader)
-        logger(f'Epoch {epoch+1}, Train loss {train_losses:.4f}, G_losses {G_losses:.4f}, T_losses {T_losses:.4f}')
+        if batch_count:
+            train_losses /= batch_count
+            g_losses /= batch_count
+            t_losses /= batch_count
+        epoch_idx = epoch.item() + 1
+        logger(f'Epoch {epoch_idx}, Train loss {train_losses:.4f}, G_losses {G_losses:.4f}, T_losses {T_losses:.4f}')
 
     # save model
     torch.save({'epoch': epoch,
@@ -128,9 +140,10 @@ def train_aligner(args):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--device', type=str, default='cuda:1')
-    parser.add_argument('--data_dir', type=str, default='../data/')
+    parser.add_argument('--seed', type=np.int64, default=0)
+    parser.add_argument('--device', default='cuda:1')
+    parser.add_argument('--data_dir', default='../data/')
+    parser.add_argument('--epochs', type=np.int64, default=199)
     args = parser.parse_args()
 
     train_aligner(args)

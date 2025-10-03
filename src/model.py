@@ -4,17 +4,27 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
 class AlignerDataset(Dataset):
+    _LABEL_MAP = {
+        'gdsc': 1.0,
+        'tcga': 0.0,
+        'pdx': 0.0,
+    }
+
     def __init__(self, data_df, data_label, dis_label):
+        label_key = data_label.lower()
+        assert label_key in self._LABEL_MAP, f"Unsupported data_label '{data_label}'"
+
         self.data = torch.tensor(data_df.values, dtype=torch.float32)
         self.n_genes = self.data.shape[1]
         self.n_samples = self.data.shape[0]
         self.gene_set = data_df.columns.to_list()
-        assert data_label.lower() in ['gdsc', 'tcga']
-        if data_label.lower() == 'gdsc':
-            self.data_label = torch.ones(self.n_samples, dtype=torch.float32)
-        else:
-            self.data_label = torch.zeros(self.n_samples, dtype=torch.float32)
-        self.dis_label = torch.tensor(dis_label.values, dtype=torch.int64)
+
+        label_value = self._LABEL_MAP[label_key]
+        self.data_label = torch.full((self.n_samples,), label_value, dtype=torch.float32)
+
+        dis_array = np.asarray(dis_label)
+        assert dis_array.shape[0] == self.n_samples, "Mismatch between data and label counts"
+        self.dis_label = torch.tensor(dis_array, dtype=torch.int64)
 
     def __len__(self):
         return self.n_samples
@@ -25,12 +35,13 @@ class AlignerDataset(Dataset):
 class ExpDrugDataset(Dataset):
     def __init__(self, emb_list, genef_list, chemical_list, resp_list):
         self.emb = emb_list #torch.tensor(emb_list, dtype=torch.float32)
-        self.emb_dim = len(emb_list[0])
-        self.n_samples = len(emb_list)
+        first_emb = np.asarray(emb_list[0])
+        self.emb_dim = first_emb.shape[0]
+        self.n_samples = np.asarray(emb_list).shape[0]
         self.genef = genef_list
-        self.genef_dim = len(genef_list[0])
+        self.genef_dim = np.asarray(genef_list[0]).shape[0]
         self.chemical = chemical_list #torch.tensor(chemical_list, dtype=torch.float32)
-        self.chemical_dim = len(chemical_list[0])
+        self.chemical_dim = np.asarray(chemical_list[0]).shape[0]
         self.resp = torch.tensor(resp_list, dtype=torch.float32)
         
     def __len__(self):
@@ -46,7 +57,7 @@ class ExpDrugDataset(Dataset):
 
 class GDSC_AE(nn.Module):
     def __init__(self, n_genes, n_classes, n_latent):
-        super(GDSC_AE, self).__init__()
+        nn.Module.__init__(self)
         self.encoder = nn.Sequential(
             nn.Linear(n_genes, 256),
             nn.LayerNorm(256),
@@ -67,7 +78,7 @@ class GDSC_AE(nn.Module):
     
 class TCGA_weightencoder(nn.Module):
     def __init__(self, n_genes, n_latent, n_celines = 673):
-        super(TCGA_weightencoder, self).__init__()
+        nn.Module.__init__(self)
         self.n_celines = n_celines
 
         self.Q = nn.Sequential(
@@ -99,7 +110,7 @@ class TCGA_weightencoder(nn.Module):
     
 class Emb_Dis_classifier(nn.Module):
     def __init__(self, n_latent, n_classes):
-        super(Emb_Dis_classifier, self).__init__()
+        nn.Module.__init__(self)
         self.label_classifier = nn.Sequential(
             nn.Linear(n_latent, 128),
             nn.LayerNorm(128),
@@ -115,7 +126,7 @@ class Emb_Dis_classifier(nn.Module):
     
 class Exp_Dis_classifier(nn.Module):
     def __init__(self, n_genes, n_latent, n_classes):
-        super(Exp_Dis_classifier, self).__init__()
+        nn.Module.__init__(self)
         self.label_classifier = nn.Sequential(
             nn.Linear(n_genes, 512),
             nn.LayerNorm(512),
@@ -135,7 +146,7 @@ class Exp_Dis_classifier(nn.Module):
 class Response_predictor(nn.Module):
     def __init__(self, emb_dim, genef_dim, chemical_dim
                  , hidden_dim1, hidden_dim2, output_dim, dropout=0.1):
-        super(Response_predictor, self).__init__()
+        nn.Module.__init__(self)
         self.emb_fc = nn.Sequential(
             nn.Linear(emb_dim, hidden_dim1),
             nn.BatchNorm1d(hidden_dim1),

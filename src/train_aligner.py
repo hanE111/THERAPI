@@ -48,11 +48,11 @@ def train_aligner(args):
 
     # model
     gdsc_AE = GDSC_AE(n_genes=gdsc_dataset.n_genes, n_classes=num_tissue, n_latent=dim_latent)
-    tcga_weightencoder = TCGA_weightencoder(n_genes=pdx_dataset.n_genes, n_latent=dim_latent, n_celines=gdsc_data_df.shape[0])
+    pdx_weightencoder = TCGA_weightencoder(n_genes=pdx_dataset.n_genes, n_latent=dim_latent, n_celines=gdsc_data_df.shape[0])
     emb_dis_classifier = Emb_Dis_classifier(n_latent=dim_latent, n_classes=num_tissue)
     exp_dis_classifier = Exp_Dis_classifier(n_genes=pdx_dataset.n_genes, n_latent=dim_latent, n_classes=num_tissue)
     gdsc_AE.to(args.device)
-    tcga_weightencoder.to(args.device)
+    pdx_weightencoder.to(args.device)
     emb_dis_classifier.to(args.device)
     exp_dis_classifier.to(args.device)
 
@@ -61,7 +61,7 @@ def train_aligner(args):
     classifier_criterion = nn.CrossEntropyLoss()
     joint_params = (
         parameter
-        for module in (gdsc_AE, tcga_weightencoder, emb_dis_classifier, exp_dis_classifier)
+        for module in (gdsc_AE, pdx_weightencoder, emb_dis_classifier, exp_dis_classifier)
         for parameter in module.parameters()
     )
     optimizer = torch.optim.Adam(joint_params, lr=lr)
@@ -72,13 +72,13 @@ def train_aligner(args):
     # training
     for epoch in np.arange(args.epochs, dtype=np.int64):
         gdsc_AE.train()
-        tcga_weightencoder.train()
+        pdx_weightencoder.train()
         emb_dis_classifier.train()
         exp_dis_classifier.train()
 
         train_losses = 0
         g_losses = 0
-        t_losses = 0
+        pdx_losses = 0
         batch_count = 0
         for pdx_gex, _, pdx_dis_label in pdx_dataloader:
             pdx_gex = pdx_gex.to(args.device)
@@ -98,39 +98,39 @@ def train_aligner(args):
             Gclass_loss_exp = classifier_criterion(gdsc_exp_dis_pred, gdsc_dis_label)
             G_losses = loss_a*Grecon_loss + loss_b*Gcenter_loss + loss_c*(Gclass_loss_emb + Gclass_loss_exp) 
 
-            # TCGA loss
-            tcga_weights, tcga_latent, tcga_wgex, tcga_recon = tcga_weightencoder(pdx_gex, gdsc_z, gdsc_gex)
-            tcga_emb_dis_pred = emb_dis_classifier(tcga_latent)
-            tcga_exp_dis_pred = exp_dis_classifier(tcga_wgex)
+            # PDX loss
+            pdx_weights, pdx_latent, pdx_wgex, pdx_recon = pdx_weightencoder(pdx_gex, gdsc_z, gdsc_gex)
+            pdx_emb_dis_pred = emb_dis_classifier(pdx_latent)
+            pdx_exp_dis_pred = exp_dis_classifier(pdx_wgex)
 
-            Trecon_loss = autoencoder_criterion(tcga_recon, pdx_gex)        
-            Tcenter_loss = center_criterion(tcga_latent, pdx_dis_label)
-            Tclass_loss_emb = classifier_criterion(tcga_emb_dis_pred, pdx_dis_label)
-            Tclass_loss_exp = classifier_criterion(tcga_exp_dis_pred, pdx_dis_label)
-            T_losses = loss_a*Trecon_loss + loss_b*Tcenter_loss + loss_c*(Tclass_loss_emb + Tclass_loss_exp)
+            PDXrecon_loss = autoencoder_criterion(pdx_recon, pdx_gex)
+            PDXcenter_loss = center_criterion(pdx_latent, pdx_dis_label)
+            PDXclass_loss_emb = classifier_criterion(pdx_emb_dis_pred, pdx_dis_label)
+            PDXclass_loss_exp = classifier_criterion(pdx_exp_dis_pred, pdx_dis_label)
+            PDX_losses = loss_a*PDXrecon_loss + loss_b*PDXcenter_loss + loss_c*(PDXclass_loss_emb + PDXclass_loss_exp)
 
             # update
             optimizer.zero_grad()
-            total_losses = G_losses + T_losses
+            total_losses = G_losses + PDX_losses
             total_losses.backward()
             optimizer.step()
 
             train_losses += total_losses.item()
             g_losses += G_losses.item()
-            t_losses += T_losses.item()
+            pdx_losses += PDX_losses.item()
             batch_count += 1
 
         if batch_count:
             train_losses /= batch_count
             g_losses /= batch_count
-            t_losses /= batch_count
+            pdx_losses /= batch_count
         epoch_idx = epoch.item() + 1
-        logger(f'Epoch {epoch_idx}, Train loss {train_losses:.4f}, G_losses {G_losses:.4f}, T_losses {T_losses:.4f}')
+        logger(f'Epoch {epoch_idx}, Train loss {train_losses:.4f}, G_losses {g_losses:.4f}, PDX_losses {pdx_losses:.4f}')
 
     # save model
     torch.save({'epoch': epoch,
                 'gdsc_AE': gdsc_AE.state_dict(),
-                'tcga_weightencoder': tcga_weightencoder.state_dict(),
+                'pdx_weightencoder': pdx_weightencoder.state_dict(),
                 'emb_dis_classifier': emb_dis_classifier.state_dict(),
                 'exp_dis_classifier': exp_dis_classifier.state_dict(),
                 'optimizer': optimizer.state_dict()

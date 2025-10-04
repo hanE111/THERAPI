@@ -30,8 +30,8 @@ def train_aligner(args):
     gdsc_data_dir = os.path.join(args.data_dir, 'GDSC_gex.csv')
     gdsc_info_dir = os.path.join(args.data_dir, 'GDSC_info.csv')
 
-    pdx_data_dir = os.path.join(args.data_dir, 'PDX_gex.csv')
-    pdx_info_dir = os.path.join(args.data_dir, 'PDX_info.csv')
+    pdx_data_dir = os.path.join(args.data_dir, 'PDX_unlabeled_gex.csv')
+    pdx_info_dir = os.path.join(args.data_dir, 'PDX_unlabeled_info.csv')
 
     gdsc_data_df = pd.read_csv(gdsc_data_dir, index_col=0)
     gdsc_info_df = pd.read_csv(gdsc_info_dir)

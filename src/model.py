@@ -144,42 +144,60 @@ class Exp_Dis_classifier(nn.Module):
         return self.label_classifier(z)
     
 class Response_predictor(nn.Module):
-    def __init__(self, emb_dim, genef_dim, chemical_dim
-                 , hidden_dim1, hidden_dim2, output_dim, dropout=0.1):
+    """
+    Regression predictor using only genomic and chemical embeddings.
+
+    Input: concatenation of aligned genomic embedding + chemical fingerprint
+    Output: single continuous value (predicted BestAvgResponse)
+    """
+    def __init__(self, n_genes=978, n_compound=978, n_latent=128, dropout=0.3):
         nn.Module.__init__(self)
-        self.emb_fc = nn.Sequential(
-            nn.Linear(emb_dim, hidden_dim1),
-            nn.BatchNorm1d(hidden_dim1),
+
+        # Genomic embedding pathway
+        self.genomic_fc = nn.Sequential(
+            nn.Linear(n_genes, n_latent),
+            nn.BatchNorm1d(n_latent),
             nn.ReLU(),
             nn.Dropout(dropout)
         )
-        self.genef_fc = nn.Sequential(
-            nn.Linear(genef_dim, hidden_dim1),
-            nn.BatchNorm1d(hidden_dim1),
-            nn.ReLU(),
-            nn.Dropout(dropout)
-        )
+
+        # Chemical embedding pathway
         self.chemical_fc = nn.Sequential(
-            nn.Linear(chemical_dim, hidden_dim1),
-            nn.BatchNorm1d(hidden_dim1),
+            nn.Linear(n_compound, n_latent),
+            nn.BatchNorm1d(n_latent),
             nn.ReLU(),
             nn.Dropout(dropout)
         )
+
+        # Combined pathway for regression
+        combined_dim = n_latent * 2  # genomic + chemical
         self.pred_head = nn.Sequential(
-            nn.Linear(hidden_dim1*3,hidden_dim1),
-            nn.BatchNorm1d(hidden_dim1),
+            nn.Linear(combined_dim, 256),
+            nn.BatchNorm1d(256),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim1,hidden_dim2),
-            # nn.BatchNorm1d(hidden_dim2),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim2,output_dim)
-            )
-    def forward(self, emb, genef, chemical):
-        emb_out = self.emb_fc(emb)
-        genef_out = self.genef_fc(genef)
-        chemical_out = self.chemical_fc(chemical)
-        out = torch.cat([emb_out, genef_out, chemical_out], dim=1)
-        out = self.pred_head(out)
-        return out
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(64, 1)  # Single continuous output (no sigmoid)
+        )
+
+    def forward(self, genomic_emb, chemical_emb):
+        """
+        Args:
+            genomic_emb: (batch_size, n_genes) - aligned PDX genomic embedding
+            chemical_emb: (batch_size, n_compound) - chemical fingerprint
+
+        Returns:
+            prediction: (batch_size, 1) - predicted BestAvgResponse
+        """
+        genomic_out = self.genomic_fc(genomic_emb)
+        chemical_out = self.chemical_fc(chemical_emb)
+        out = torch.cat([genomic_out, chemical_out], dim=1)
+        prediction = self.pred_head(out)
+        return prediction

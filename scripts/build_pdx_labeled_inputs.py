@@ -232,10 +232,11 @@ def map_response_label(category):
 
 def build_response_table(curves):
     working = curves.copy()
-    working["Label"] = working["ResponseCategory"].apply(map_response_label)
-    working = working.dropna(subset=["Label"])
-    working["Label"] = working["Label"].astype(_INT)
-    working = working.rename(columns={"Treatment": "Drug"})
+    # Extract BestAvgResponse as continuous regression target
+    working = working.rename(columns={"Treatment": "Drug", "BestAvgResponse": "Target"})
+    working = working.dropna(subset=["Target"])
+    # Convert to float32 for regression
+    working["Target"] = working["Target"].astype(np.float32)
     return working
 
 
@@ -352,7 +353,7 @@ def main():
     labeled_info = pdx_info_indexed.loc[present_models].reset_index()
     labeled_gex = pdx_gex_padded.loc[present_models]
 
-    resp_out = resp_df[["Model", "Drug", "ResponseCategory", "Label"]].copy()
+    resp_out = resp_df[["Model", "Drug", "ResponseCategory", "Target"]].copy()
     resp_out["Canonical_SMILES"] = [smiles_lookup.get(drug) for drug in resp_out["Drug"]]
 
     LOGGER.info("Saving artifacts")

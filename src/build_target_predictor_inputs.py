@@ -29,7 +29,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gdsc_resp", type=str, default="../data/GDSC_resp.csv", help="Path to GDSC response CSV")
     parser.add_argument("--gdsc_pert", type=str, default="../data/GDSC_perturbation.npy", help="Path to GDSC perturbation embeddings")
     parser.add_argument("--gdsc_comp", type=str, default="../data/GDSC_perturbation_compound.npy", help="Path to GDSC compound embeddings")
-    parser.add_argument("--response_files", nargs="*", default=("../data_pdx1/train_PCT_curve_metrics.csv", "../data_pdx1/test_PCT_curve_metrics.csv"), help="List of PDX response metric CSVs")
+    parser.add_argument("--response_files", nargs="*", default=("../data_pdx1/unlabeled_PCT_curve_metrics.csv", "../data_pdx1/labeled_PCT_curve_metrics.csv"), help="List of PDX response metric CSVs")
     parser.add_argument("--treatment_map", type=str, default=None, help="Optional CSV with columns Treatment,GDSC_Drug,Canonical_SMILES")
     parser.add_argument("--output_prefix", type=str, default="../data/PDX1", help="Prefix for generated predictor assets")
     parser.add_argument("--allow_combinations", action="store_true", help="Whether to keep combination therapies (requires mappings)")

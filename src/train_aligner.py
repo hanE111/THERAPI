@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -26,37 +27,81 @@ def train_aligner(args):
     loss_c = 0.4
 
     # load data
-    gdsc_data_dir = os.path.join(args.data_dir, 'GDSC_gex.csv')
-    gdsc_info_dir = os.path.join(args.data_dir, 'GDSC_info.csv')
+    gdsc_data_dir = args.gdsc_gex or os.path.join(args.data_dir, 'GDSC_gex.csv')
+    gdsc_info_dir = args.gdsc_info or os.path.join(args.data_dir, 'GDSC_info.csv')
 
-    tcga_unlabeled_data_dir = os.path.join(args.data_dir, 'TCGA_unlabeled_gex.csv')
-    tcga_unlabeled_info_dir = os.path.join(args.data_dir, 'TCGA_unlabeled_info.csv')
+    target_dataset_name = args.target_dataset.lower()
+    if args.target_gex:
+        target_data_dir = args.target_gex
+    else:
+        if target_dataset_name == 'tcga':
+            target_data_dir = os.path.join(args.data_dir, 'TCGA_unlabeled_gex.csv')
+        elif target_dataset_name in ['pdx', 'pdx1']:
+            target_data_dir = os.path.join(args.data_dir, 'PDX1_gex.csv')
+        else:
+            raise ValueError(f"Unknown target_dataset '{args.target_dataset}' and no --target_gex provided")
+
+    if args.target_info:
+        target_info_dir = args.target_info
+    else:
+        if target_dataset_name == 'tcga':
+            target_info_dir = os.path.join(args.data_dir, 'TCGA_unlabeled_info.csv')
+        elif target_dataset_name in ['pdx', 'pdx1']:
+            target_info_dir = os.path.join(args.data_dir, 'PDX1_info.csv')
+        else:
+            raise ValueError(f"Unknown target_dataset '{args.target_dataset}' and no --target_info provided")
 
     gdsc_data_df = pd.read_csv(gdsc_data_dir, index_col=0)
     gdsc_info_df = pd.read_csv(gdsc_info_dir)
-    num_tissue = len(gdsc_info_df['tissue_label'].unique())
+    target_data_df = pd.read_csv(target_data_dir, index_col=0)
+    target_info_df = pd.read_csv(target_info_dir)
 
-    tcga_unlabeled_data_df = pd.read_csv(tcga_unlabeled_data_dir, index_col=0)
-    tcga_unlabeled_info_df = pd.read_csv(tcga_unlabeled_info_dir)
+    if gdsc_data_df.shape[0] != len(gdsc_info_df):
+        raise ValueError('Mismatch between GDSC expression rows and info rows')
+    if target_data_df.shape[0] != len(target_info_df):
+        raise ValueError('Mismatch between target expression rows and info rows')
 
-    gdsc_dataset = AlignerDataset(gdsc_data_df, 'gdsc', gdsc_info_df['tissue_label'])
-    tcga_unlabeled_dataset = AlignerDataset(tcga_unlabeled_data_df, 'tcga', tcga_unlabeled_info_df['tissue_label'])
-    tcga_unlabeled_dataloader = DataLoader(tcga_unlabeled_dataset, batch_size=batch_size, shuffle=True, drop_last=False, generator = torch.Generator().manual_seed(args.seed))
+    # ensure shared gene ordering
+    if not np.array_equal(gdsc_data_df.columns, target_data_df.columns):
+        missing_genes = [gene for gene in gdsc_data_df.columns if gene not in target_data_df.columns]
+        if missing_genes:
+            logger(f"Target dataset missing {len(missing_genes)} genes; zero-padding those columns.")
+        target_data_df = target_data_df.reindex(columns=gdsc_data_df.columns, fill_value=0.0)
+
+    combined_labels = sorted(set(gdsc_info_df['tissue_label'].tolist()) | set(target_info_df['tissue_label'].tolist()))
+    label_mapping = {label: idx for idx, label in enumerate(combined_labels)}
+
+    gdsc_info_df['tissue_label_mapped'] = gdsc_info_df['tissue_label'].map(label_mapping)
+    target_info_df['tissue_label_mapped'] = target_info_df['tissue_label'].map(label_mapping)
+
+    if gdsc_info_df['tissue_label_mapped'].isna().any():
+        raise ValueError('Unmapped tissue labels found in GDSC metadata')
+    if target_info_df['tissue_label_mapped'].isna().any():
+        raise ValueError('Unmapped tissue labels found in target metadata')
+
+    gdsc_info_df['tissue_label_mapped'] = gdsc_info_df['tissue_label_mapped'].astype(int)
+    target_info_df['tissue_label_mapped'] = target_info_df['tissue_label_mapped'].astype(int)
+
+    num_tissue = len(label_mapping)
+
+    gdsc_dataset = AlignerDataset(gdsc_data_df, 'gdsc', gdsc_info_df['tissue_label_mapped'], domain_flag=1.0)
+    target_dataset = AlignerDataset(target_data_df, args.target_dataset, target_info_df['tissue_label_mapped'], domain_flag=0.0)
+    target_dataloader = DataLoader(target_dataset, batch_size=batch_size, shuffle=True, drop_last=False, generator=torch.Generator().manual_seed(args.seed))
 
     # model
     gdsc_AE = GDSC_AE(n_genes=gdsc_dataset.n_genes, n_classes=num_tissue, n_latent=dim_latent)
-    tcga_weightencoder = TCGA_weightencoder(n_genes=tcga_unlabeled_dataset.n_genes, n_latent=dim_latent, n_celines=gdsc_data_df.shape[0])
+    target_weightencoder = TCGA_weightencoder(n_genes=target_dataset.n_genes, n_latent=dim_latent, n_celines=gdsc_data_df.shape[0])
     emb_dis_classifier = Emb_Dis_classifier(n_latent=dim_latent, n_classes=num_tissue)
-    exp_dis_classifier = Exp_Dis_classifier(n_genes=tcga_unlabeled_dataset.n_genes, n_latent=dim_latent, n_classes=num_tissue)
+    exp_dis_classifier = Exp_Dis_classifier(n_genes=target_dataset.n_genes, n_latent=dim_latent, n_classes=num_tissue)
     gdsc_AE.to(args.device)
-    tcga_weightencoder.to(args.device)
+    target_weightencoder.to(args.device)
     emb_dis_classifier.to(args.device)
     exp_dis_classifier.to(args.device)
 
     autoencoder_criterion = nn.MSELoss()
     center_criterion = CenterLoss(num_classes=num_tissue, feat_dim=dim_latent, device=args.device)
     classifier_criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(list(gdsc_AE.parameters())+list(tcga_weightencoder.parameters())+list(emb_dis_classifier.parameters())+list(exp_dis_classifier.parameters()), lr=lr)
+    optimizer = torch.optim.Adam(list(gdsc_AE.parameters())+list(target_weightencoder.parameters())+list(emb_dis_classifier.parameters())+list(exp_dis_classifier.parameters()), lr=lr)
 
     if not os.path.exists('ckpts'):
         os.makedirs('ckpts', exist_ok=True)
@@ -64,16 +109,16 @@ def train_aligner(args):
     # training
     for epoch in range(199):
         gdsc_AE.train()
-        tcga_weightencoder.train()
+        target_weightencoder.train()
         emb_dis_classifier.train()
         exp_dis_classifier.train()
 
         train_losses = 0
         g_losses = 0
         t_losses = 0
-        for tcga_gex, _, tcga_dis_label in tcga_unlabeled_dataloader:
-            tcga_gex = tcga_gex.to(args.device)
-            tcga_dis_label = tcga_dis_label.to(args.device)
+        for target_gex, _, target_dis_label in target_dataloader:
+            target_gex = target_gex.to(args.device)
+            target_dis_label = target_dis_label.to(args.device)
 
             gdsc_gex = gdsc_dataset.data.to(args.device)
             gdsc_dis_label = gdsc_dataset.dis_label.to(args.device)
@@ -87,17 +132,17 @@ def train_aligner(args):
             Gcenter_loss = center_criterion(gdsc_z, gdsc_dis_label)
             Gclass_loss_emb = classifier_criterion(gdsc_emb_dis_pred, gdsc_dis_label)
             Gclass_loss_exp = classifier_criterion(gdsc_exp_dis_pred, gdsc_dis_label)
-            G_losses = loss_a*Grecon_loss + loss_b*Gcenter_loss + loss_c*(Gclass_loss_emb + Gclass_loss_exp) 
+            G_losses = loss_a*Grecon_loss + loss_b*Gcenter_loss + loss_c*(Gclass_loss_emb + Gclass_loss_exp)
 
-            # TCGA loss
-            tcga_weights, tcga_latent, tcga_wgex, tcga_recon = tcga_weightencoder(tcga_gex, gdsc_z, gdsc_gex)
-            tcga_emb_dis_pred = emb_dis_classifier(tcga_latent)
-            tcga_exp_dis_pred = exp_dis_classifier(tcga_wgex)
+            # Target loss
+            target_weights, target_latent, target_wgex, target_recon = target_weightencoder(target_gex, gdsc_z, gdsc_gex)
+            target_emb_dis_pred = emb_dis_classifier(target_latent)
+            target_exp_dis_pred = exp_dis_classifier(target_wgex)
 
-            Trecon_loss = autoencoder_criterion(tcga_recon, tcga_gex)        
-            Tcenter_loss = center_criterion(tcga_latent, tcga_dis_label)
-            Tclass_loss_emb = classifier_criterion(tcga_emb_dis_pred, tcga_dis_label)
-            Tclass_loss_exp = classifier_criterion(tcga_exp_dis_pred, tcga_dis_label)
+            Trecon_loss = autoencoder_criterion(target_recon, target_gex)
+            Tcenter_loss = center_criterion(target_latent, target_dis_label)
+            Tclass_loss_emb = classifier_criterion(target_emb_dis_pred, target_dis_label)
+            Tclass_loss_exp = classifier_criterion(target_exp_dis_pred, target_dis_label)
             T_losses = loss_a*Trecon_loss + loss_b*Tcenter_loss + loss_c*(Tclass_loss_emb + Tclass_loss_exp)
 
             # update
@@ -110,15 +155,15 @@ def train_aligner(args):
             g_losses += G_losses.item()
             t_losses += T_losses.item()
 
-        train_losses /= len(tcga_unlabeled_dataloader)
-        g_losses /= len(tcga_unlabeled_dataloader)
-        t_losses /= len(tcga_unlabeled_dataloader)
-        logger(f'Epoch {epoch+1}, Train loss {train_losses:.4f}, G_losses {G_losses:.4f}, T_losses {T_losses:.4f}')
+    train_losses /= len(target_dataloader)
+    g_losses /= len(target_dataloader)
+    t_losses /= len(target_dataloader)
+    logger(f'Epoch {epoch+1}, Train loss {train_losses:.4f}, G_losses {G_losses:.4f}, T_losses {T_losses:.4f}')
 
     # save model
     torch.save({'epoch': epoch,
                 'gdsc_AE': gdsc_AE.state_dict(),
-                'tcga_weightencoder': tcga_weightencoder.state_dict(),
+        'tcga_weightencoder': target_weightencoder.state_dict(),
                 'emb_dis_classifier': emb_dis_classifier.state_dict(),
                 'exp_dis_classifier': exp_dis_classifier.state_dict(),
                 'optimizer': optimizer.state_dict()
@@ -131,6 +176,11 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--device', type=str, default='cuda:1')
     parser.add_argument('--data_dir', type=str, default='../data/')
+    parser.add_argument('--gdsc_gex', type=str, default=None, help='Path to GDSC gene expression matrix (CSV)')
+    parser.add_argument('--gdsc_info', type=str, default=None, help='Path to GDSC metadata CSV')
+    parser.add_argument('--target_dataset', type=str, default='tcga', help='Target dataset identifier (e.g., tcga, pdx1)')
+    parser.add_argument('--target_gex', type=str, default=None, help='Path to target gene expression matrix (CSV)')
+    parser.add_argument('--target_info', type=str, default=None, help='Path to target metadata CSV')
     args = parser.parse_args()
 
     train_aligner(args)

@@ -4,16 +4,24 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
 class AlignerDataset(Dataset):
-    def __init__(self, data_df, data_label, dis_label):
+    def __init__(self, data_df, data_label, dis_label, domain_flag=None):
         self.data = torch.tensor(data_df.values, dtype=torch.float32)
         self.n_genes = self.data.shape[1]
         self.n_samples = self.data.shape[0]
         self.gene_set = data_df.columns.to_list()
-        assert data_label.lower() in ['gdsc', 'tcga']
-        if data_label.lower() == 'gdsc':
-            self.data_label = torch.ones(self.n_samples, dtype=torch.float32)
+        self.sample_ids = list(data_df.index)
+
+        if domain_flag is not None:
+            self.data_label = torch.full((self.n_samples,), float(domain_flag), dtype=torch.float32)
         else:
-            self.data_label = torch.zeros(self.n_samples, dtype=torch.float32)
+            label = data_label.lower()
+            if label == 'gdsc':
+                self.data_label = torch.ones(self.n_samples, dtype=torch.float32)
+            elif label in ['tcga', 'pdx', 'pdx1', 'target']:
+                self.data_label = torch.zeros(self.n_samples, dtype=torch.float32)
+            else:
+                raise ValueError(f"Unsupported data_label '{data_label}' for AlignerDataset")
+
         self.dis_label = torch.tensor(dis_label.values, dtype=torch.int64)
 
     def __len__(self):

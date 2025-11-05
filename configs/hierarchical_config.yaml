@@ -1,0 +1,128 @@
+# Configuration for Hierarchical THERAPI
+
+# Model Architecture
+model:
+  latent_dim: 128
+  n_heads: 4
+  routing_strategy: 'gumbel'  # Options: 'softmax', 'gumbel', 'sparsemax'
+  use_multi_head_attention: true
+  dropout: 0.3
+
+# Training Parameters
+training:
+  batch_size: 128
+  learning_rate: 0.001
+  n_epochs: 200
+  seed: 42
+
+  # Temperature annealing for Gumbel-Softmax
+  target_temperature: 0.5
+  temperature_anneal: true
+  temperature_anneal_rate: 0.99
+
+  # Loss weights
+  loss_weights:
+    center: 0.8        # Center loss for tissue clustering
+    routing: 0.4       # Tissue routing consistency
+    entropy: 0.2       # Entropy regularization (decisive routing)
+    diversity: 0.1     # Batch diversity (different tissues)
+    temperature: 0.1   # Temperature regularization
+    reconstruction: 0.2  # Optional reconstruction loss
+
+# Data Parameters
+data:
+  data_root: 'data/'
+  source_domain: 'GDSC'
+  target_domain: 'TCGA'
+
+  # Gene filtering
+  use_cancer_genes: true
+  min_expression_threshold: 0.0
+
+  # Tissue filtering
+  min_samples_per_tissue: 5
+
+  # Normalization
+  normalize_expression: true
+  normalization_method: 'standard'  # Options: 'standard', 'minmax', 'robust'
+
+# Predictor Parameters
+predictor:
+  hidden_dim1: 256
+  hidden_dim2: 128
+  output_dim: 1
+  dropout: 0.1
+
+  # For drug response prediction
+  use_perturbation: true
+  use_rank_representation: true
+  use_chemical_features: true
+
+# Evaluation Parameters
+evaluation:
+  # TRANSACT-style evaluation
+  use_mann_whitney: true
+  multiple_testing_correction: 'fdr_bh'  # Benjamini-Hochberg
+  confidence_level: 0.05
+
+  # Validation
+  use_pdx_validation: true
+  validation_frequency: 5  # Validate every N epochs
+
+  # Metrics to track
+  track_metrics:
+    - 'auroc'
+    - 'auprc'
+    - 'mann_whitney_u'
+    - 'routing_accuracy'
+    - 'attention_entropy'
+
+# Ablation Studies
+ablation:
+  variants:
+    - 'full_model'              # Complete hierarchical model
+    - 'no_hierarchy'            # Flat attention (original THERAPI)
+    - 'uniform_tissue_weights'  # Fixed uniform weights
+    - 'hard_routing'            # Hard tissue assignment
+    - 'no_multi_head'           # Single-head attention
+    - 'no_temperature_learning' # Fixed temperature
+
+# Computational Settings
+compute:
+  device: 'cuda:0'
+  num_workers: 4
+  pin_memory: true
+  mixed_precision: false  # Use FP16 for faster training
+
+# Logging and Checkpointing
+logging:
+  log_dir: 'log/'
+  checkpoint_dir: 'ckpts/'
+  output_dir: 'output/'
+
+  # Checkpoint frequency
+  save_frequency: 10
+  save_best_only: false
+
+  # Tensorboard
+  use_tensorboard: false
+  tensorboard_dir: 'runs/'
+
+# Interpretability Analysis
+interpretability:
+  # Tissue routing analysis
+  save_routing_weights: true
+  save_attention_weights: true
+
+  # Visualization
+  plot_tissue_distribution: true
+  plot_attention_heatmaps: true
+  plot_routing_accuracy: true
+
+  # Sample analysis
+  n_samples_to_analyze: 100
+
+# Reproducibility
+reproducibility:
+  deterministic: true
+  benchmark: false  # cudnn.benchmark

@@ -19,11 +19,13 @@ import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score, average_precision_score, accuracy_score, precision_score, f1_score
 
-# Add paths
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+# Import from src
+src_path = os.path.join(os.path.dirname(__file__), 'src')
+sys.path.insert(0, src_path)
 from model import ExpDrugDataset
+sys.path.remove(src_path)
 
-sys.path.insert(0, os.path.dirname(__file__))
+# Import hierarchical components
 from utils.data_loader import TransactDataLoader
 from utils.tissue_mapping import TissueMapper
 from models.hierarchical_therapi import HierarchicalTHERAPI, HierarchicalResponsePredictor

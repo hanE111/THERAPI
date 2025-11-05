@@ -19,16 +19,22 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
-# Add src to path to import original THERAPI utilities
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
-from utils import set_seed, Logger, EarlyStopper
+# Import original THERAPI utilities from src
+src_path = os.path.join(os.path.dirname(__file__), 'src')
+sys.path.insert(0, src_path)
+import utils as src_utils
 from center_loss import CenterLoss
+sys.path.remove(src_path)
 
-# Import hierarchical components
-sys.path.insert(0, os.path.dirname(__file__))
+# Import hierarchical components (now safe from conflict)
 from utils.data_loader import TransactDataLoader
 from utils.tissue_mapping import TissueMapper
 from models.hierarchical_therapi import HierarchicalTHERAPI
+
+# Alias the src utilities
+set_seed = src_utils.set_seed
+Logger = src_utils.Logger
+EarlyStopper = src_utils.EarlyStopper
 
 
 class HierarchicalAlignerDataset(Dataset):

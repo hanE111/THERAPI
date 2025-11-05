@@ -20,13 +20,18 @@ from torch.utils.data import Dataset, DataLoader
 # Import original THERAPI utilities from src
 src_path = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.insert(0, src_path)
-from utils import set_seed, Logger, EarlyStopper
-sys.path.pop(0)  # Remove src from path
+import utils as src_utils
+sys.path.remove(src_path)
 
 # Import hierarchical components
 from hierarchical_utils.data_loader import TransactDataLoader
-from hierarchical_utils.tissue_mapping import TissueMapper
+from utils.tissue_mapping import TissueMapper
 from models.hierarchical_therapi import HierarchicalTHERAPI, HierarchicalResponsePredictor
+
+# Alias the src utilities
+set_seed = src_utils.set_seed
+Logger = src_utils.Logger
+EarlyStopper = src_utils.EarlyStopper
 
 
 class HierarchicalDrugDataset(Dataset):

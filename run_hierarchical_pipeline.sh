@@ -27,13 +27,13 @@ echo ""
 echo "Step 1: Training Hierarchical Aligner (GDSC → TCGA)"
 echo "--------------------------------------------------"
 
-python train_hierarchical.py \
-    --source GDSC \
-    --target TCGA \
-    --data_dir ${DATA_DIR} \
-    --config ${CONFIG} \
-    --device ${DEVICE} \
-    --seed ${SEED}
+# python train_hierarchical.py \
+#     --source GDSC \
+#     --target TCGA \
+#     --data_dir ${DATA_DIR} \
+#     --config ${CONFIG} \
+#     --device ${DEVICE} \
+#     --seed ${SEED}
 
 echo "✓ Aligner training completed"
 
@@ -44,12 +44,12 @@ echo ""
 echo "Step 2: Training Drug Response Predictor"
 echo "--------------------------------------------------"
 
-python train_hierarchical_predictor.py \
-    --aligner_path ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt \
-    --data_dir ${DATA_DIR} \
-    --config ${CONFIG} \
-    --device ${DEVICE} \
-    --seed ${SEED}
+# python train_hierarchical_predictor.py \
+#     --aligner_path ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt \
+#     --data_dir ${DATA_DIR} \
+#     --config ${CONFIG} \
+#     --device ${DEVICE} \
+#     --seed ${SEED}
 
 echo "✓ Predictor training completed"
 

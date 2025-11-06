@@ -1,0 +1,1482 @@
+(base) haeun@ubuntu:/data/project/haeun/THERAPI$ conda activate threapi
+Could not find conda environment: threapi
+You can list all discoverable environments with `conda info --envs`.
+
+(base) haeun@ubuntu:/data/project/haeun/THERAPI$ conda activate therapi
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ chmod +x /data/project/haeun/THERAPI/run_hierarch
+ical_pipeline.sh
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ chmod +x run_hierarchical_pipeline.sh
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+[18:38:05] Start training HierarchicalTHERAPI_aligner_GDSC_TCGA model
+[18:38:05] random seed with 42
+/data/project/haeun/THERAPI/hierarchical_utils/data_loader.py:209: DtypeWarning: Columns (2) have mix
+ed types. Specify dtype option on import or set low_memory=False.
+  tissue_info = pd.read_csv(tissue_path)
+[18:39:31] Using 0 common genes
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 328, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 322, in main
+    model = train_hierarchical_aligner(args, config)
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 203, in train_hierarchical_aligner
+    model = HierarchicalTHERAPI(
+  File "/data/project/haeun/THERAPI/models/hierarchical_therapi.py", line 185, in __init__
+    nn.Linear(n_genes, n_latent),
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/linear.py", line
+84, in __init__
+    self.reset_parameters()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/linear.py", line
+87, in reset_parameters
+    init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/init.py", line 376, in ka
+iming_uniform_
+    std = gain / math.sqrt(fan)
+ZeroDivisionError: float division by zero
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ git pull
+Already up to date.
+(therapi) haeun@ubuntu:/data/project/haeun/T
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ git pull
+remote: Enumerating objects: 10, done.
+remote: Counting objects: 100% (10/10), done.
+remote: Compressing objects: 100% (6/6), done.
+remote: Total 10 (delta 4), reused 10 (delta 4), pack-reused 0 (from 0)
+Unpacking objects: 100% (10/10), 5.94 KiB | 1.98 MiB/s, done.
+From https://github.com/hanE111/THERAPI
+   12d352e..319f832  hierarchical -> origin/hierarchical
+Updating 12d352e..319f832
+Fast-forward
+ GENE_HARMONIZATION_FIX.md                                  | 101 ++++++++++++++++++++++++++
+ debug_genes.py                                             | 131 ++++++++++++++++++++++++++++++++++
+ debug_genes_quick.py                                       | 107 +++++++++++++++++++++++++++
+ hierarchical_utils/__pycache__/data_loader.cpython-311.pyc | Bin 18223 -> 18333 bytes
+ hierarchical_utils/data_loader.py                          |  21 ++++--
+ test_harmonize_fix.py                                      |  50 +++++++++++++
+ 6 files changed, 404 insertions(+), 6 deletions(-)
+ create mode 100644 GENE_HARMONIZATION_FIX.md
+ create mode 100644 debug_genes.py
+ create mode 100644 debug_genes_quick.py
+ create mode 100644 test_harmonize_fix.py
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+[22:59:21] Start training HierarchicalTHERAPI_aligner_GDSC_TCGA model
+[22:59:21] random seed with 42
+[23:00:46] Using 1774 common genes
+/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/cuda/__init__.py:104: UserWarning:
+NVIDIA GeForce RTX 3090 with CUDA capability sm_86 is not compatible with the current PyTorch install
+ation.
+The current PyTorch install supports CUDA capabilities sm_37 sm_50 sm_60 sm_70.
+If you want to use the NVIDIA GeForce RTX 3090 GPU with PyTorch, please check the instructions at htt
+ps://pytorch.org/get-started/locally/
+
+  warnings.warn(incompatible_device_warn.format(device_name, capability, " ".join(arch_list), device_
+name))
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 328, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 322, in main
+    model = train_hierarchical_aligner(args, config)
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 241, in train_hierarchical_aligner
+    losses = compute_hierarchical_losses(
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 80, in compute_hierarchical_losses
+    output = model.hierarchical_attention_forward(patient_expr, cell_line_exprs)
+  File "/data/project/haeun/THERAPI/models/hierarchical_therapi.py", line 253, in hierarchical_attent
+ion_forward
+    patient_enc = self.patient_encoder(patient_expr)  # [batch, n_latent]
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/module.py", line
+889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/container.py", li
+ne 119, in forward
+    input = module(input)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/module.py", line
+889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/linear.py", line
+94, in forward
+    return F.linear(input, self.weight, self.bias)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/functional.py", line 1753
+, in linear
+    return torch._C._nn.linear(input, weight, bias)
+RuntimeError: CUDA error: no kernel image is available for execution on the device
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ torch --version
+Command 'torch' not found, did you mean:
+  command 'torcs' from deb torcs (1.3.7+dfsg-5)
+  command 'touch' from deb coreutils (8.32-4.1ubuntu1.2)
+Try: apt install <deb name>
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ conda list torch
+# packages in environment at /home/hane/.conda/envs/therapi:
+#
+# Name                    Version                   Build  Channel
+torch                     1.8.1+cu101              pypi_0    pypi
+torchaudio                0.8.1                    pypi_0    pypi
+torchvision               0.9.1+cu101              pypi_0    pypi
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ nvidia-smi
+Wed Nov  5 23:06:50 2025
++---------------------------------------------------------------------------------------+
+| NVIDIA-SMI 535.183.01             Driver Version: 535.183.01   CUDA Version: 12.2     |
+|-----------------------------------------+----------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |         Memory-Usage | GPU-Util  Compute M. |
+|                                         |                      |               MIG M. |
+|=========================================+======================+======================|
+|   0  NVIDIA GeForce RTX 2080 Ti     Off | 00000000:12:00.0 Off |                  N/A |
+| 30%   31C    P8               5W / 250W |      8MiB / 11264MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+|   1  NVIDIA GeForce RTX 3090        Off | 00000000:13:00.0 Off |                  N/A |
+|100%   82C    P2             298W / 350W |  15419MiB / 24576MiB |     77%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+|   2  NVIDIA GeForce RTX 2080 Ti     Off | 00000000:48:00.0 Off |                  N/A |
+| 30%   33C    P8              16W / 250W |      8MiB / 11264MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+|   3  NVIDIA GeForce RTX 2080 Ti     Off | 00000000:89:00.0 Off |                  N/A |
+| 30%   28C    P8               5W / 250W |      8MiB / 11264MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+|   4  NVIDIA GeForce RTX 3090        Off | 00000000:8A:00.0 Off |                  N/A |
+| 48%   29C    P8              30W / 350W |     12MiB / 24576MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+|   5  NVIDIA GeForce RTX 3090        Off | 00000000:C0:00.0 Off |                  N/A |
+| 47%   28C    P8              19W / 350W |     12MiB / 24576MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+|   6  NVIDIA GeForce RTX 2080 Ti     Off | 00000000:C1:00.0 Off |                  N/A |
+| 30%   29C    P8              15W / 250W |      8MiB / 11264MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+|   7  NVIDIA GeForce RTX 3090        Off | 00000000:C2:00.0 Off |                  N/A |
+| 50%   31C    P8              20W / 350W |     12MiB / 24576MiB |      0%      Default |
+|                                         |                      |                  N/A |
++-----------------------------------------+----------------------+----------------------+
+
++---------------------------------------------------------------------------------------+
+| Processes:                                                                            |
+|  GPU   GI   CI        PID   Type   Process name                            GPU Memory |
+|        ID   ID                                                             Usage      |
+|=======================================================================================|
+|    0   N/A  N/A      7049      G   /usr/lib/xorg/Xorg                            4MiB |
+|    1   N/A  N/A      7049      G   /usr/lib/xorg/Xorg                            4MiB |
+|    1   N/A  N/A   2379535      C   python                                    15404MiB |
+|    2   N/A  N/A      7049      G   /usr/lib/xorg/Xorg                            4MiB |
+|    3   N/A  N/A      7049      G   /usr/lib/xorg/Xorg                            4MiB |
+|    4   N/A  N/A      7049      G   /usr/lib/xorg/Xorg                            4MiB |
+|    5   N/A  N/A      7049      G   /usr/lib/xorg/Xorg                            4MiB |
+|    6   N/A  N/A      7049      G   /usr/lib/xorg/Xorg                            4MiB |
+|    7   N/A  N/A      7049      G   /usr/lib/xorg/Xorg                            4MiB |
++---------------------------------------------------------------------------------------+
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+[23:07:38] Start training HierarchicalTHERAPI_aligner_GDSC_TCGA model
+[23:07:38] random seed with 42
+[23:09:04] Using 1774 common genes
+/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/cuda/__init__.py:104: UserWarning:
+NVIDIA GeForce RTX 3090 with CUDA capability sm_86 is not compatible with the current PyTorch install
+ation.
+The current PyTorch install supports CUDA capabilities sm_37 sm_50 sm_60 sm_70.
+If you want to use the NVIDIA GeForce RTX 3090 GPU with PyTorch, please check the instructions at htt
+ps://pytorch.org/get-started/locally/
+
+  warnings.warn(incompatible_device_warn.format(device_name, capability, " ".join(arch_list), device_
+name))
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 328, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 322, in main
+    model = train_hierarchical_aligner(args, config)
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 241, in train_hierarchical_aligner
+    losses = compute_hierarchical_losses(
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 80, in compute_hierarchical_losses
+    output = model.hierarchical_attention_forward(patient_expr, cell_line_exprs)
+  File "/data/project/haeun/THERAPI/models/hierarchical_therapi.py", line 253, in hierarchical_attent
+ion_forward
+    patient_enc = self.patient_encoder(patient_expr)  # [batch, n_latent]
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/module.py", line
+889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/container.py", li
+ne 119, in forward
+    input = module(input)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/module.py", line
+889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/linear.py", line
+94, in forward
+    return F.linear(input, self.weight, self.bias)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/functional.py", line 1753
+, in linear
+    return torch._C._nn.linear(input, weight, bias)
+RuntimeError: CUDA error: no kernel image is available for execution on the device
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ CUDA_VISIBLE_DEVICES=0 ./run_hierarchical_pipelin
+e.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+[23:54:12] Start training HierarchicalTHERAPI_aligner_GDSC_TCGA model
+[23:54:12] random seed with 42
+[23:55:38] Using 1774 common genes
+/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/cuda/__init__.py:104: UserWarning:
+NVIDIA GeForce RTX 3090 with CUDA capability sm_86 is not compatible with the current PyTorch install
+ation.
+The current PyTorch install supports CUDA capabilities sm_37 sm_50 sm_60 sm_70.
+If you want to use the NVIDIA GeForce RTX 3090 GPU with PyTorch, please check the instructions at htt
+ps://pytorch.org/get-started/locally/
+
+  warnings.warn(incompatible_device_warn.format(device_name, capability, " ".join(arch_list), device_
+name))
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 328, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 322, in main
+    model = train_hierarchical_aligner(args, config)
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 241, in train_hierarchical_aligner
+    losses = compute_hierarchical_losses(
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 80, in compute_hierarchical_losses
+    output = model.hierarchical_attention_forward(patient_expr, cell_line_exprs)
+  File "/data/project/haeun/THERAPI/models/hierarchical_therapi.py", line 253, in hierarchical_attent
+ion_forward
+    patient_enc = self.patient_encoder(patient_expr)  # [batch, n_latent]
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/module.py", line
+889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/container.py", li
+ne 119, in forward
+    input = module(input)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/module.py", line
+889, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/linear.py", line
+94, in forward
+    return F.linear(input, self.weight, self.bias)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/functional.py", line 1753
+, in linear
+    return torch._C._nn.linear(input, weight, bias)
+RuntimeError: CUDA error: no kernel image is available for execution on the device
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ pip uninstall torch torchvision torchaudio -y
+Found existing installation: torch 1.8.1+cu101
+Uninstalling torch-1.8.1+cu101:
+  Successfully uninstalled torch-1.8.1+cu101
+Found existing installation: torchvision 0.9.1+cu101
+Uninstalling torchvision-0.9.1+cu101:
+  Successfully uninstalled torchvision-0.9.1+cu101
+Found existing installation: torchaudio 0.8.1
+Uninstalling torchaudio-0.8.1:
+  Successfully uninstalled torchaudio-0.8.1
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ pip install torch==2.0.1 torchvision==0.15.2 torc
+haudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+Looking in indexes: https://download.pytorch.org/whl/cu118
+Collecting torch==2.0.1
+  Downloading https://download.pytorch.org/whl/cu118/torch-2.0.1%2Bcu118-cp39-cp39-linux_x86_64.whl (
+2267.3 MB)
+     ━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━ 1.1/2.3 GB 28.3 MB/s eta 0:00:41
+ERROR: Exception:
+Traceback (most recent call last):
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 438, in _error_catcher
+    yield
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 561, in read
+    data = self._fp_read(amt) if not fp_closed else b""
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 527, in _fp_read
+    return self._fp.read(amt) if amt is not None else self._fp.read()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/cachecontrol/filewrapp
+er.py", line 102, in read
+    self.__buf.write(data)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/tempfile.py", line 494, in func_wrapper
+    return func(*args, **kwargs)
+OSError: [Errno 28] No space left on device
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/cli/base_command.py"
+, line 107, in _run_wrapper
+    status = _inner_run()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/cli/base_command.py"
+, line 98, in _inner_run
+    return self.run(options, args)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/cli/req_command.py",
+ line 85, in wrapper
+    return func(self, options, args)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/commands/install.py"
+, line 388, in run
+    requirement_set = resolver.resolve(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/resolver.py", line 99, in resolve
+    result = self._result = resolver.resolve(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/resolvelib/resolvers/r
+esolution.py", line 601, in resolve
+    state = resolution.resolve(requirements, max_rounds=max_rounds)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/resolvelib/resolvers/r
+esolution.py", line 434, in resolve
+    self._add_to_criteria(self.state.criteria, r, parent=None)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/resolvelib/resolvers/r
+esolution.py", line 150, in _add_to_criteria
+    if not criterion.candidates:
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/resolvelib/structs.py"
+, line 194, in __bool__
+    return bool(self._sequence)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/found_candidates.py", line 165, in __bool__
+    self._bool = any(self)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/found_candidates.py", line 149, in <genexpr>
+    return (c for c in iterator if id(c) not in self._incompatible_ids)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/found_candidates.py", line 39, in _iter_built
+    candidate = func()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/factory.py", line 180, in _make_candidate_from_link
+    base: BaseCandidate | None = self._make_base_candidate_from_link(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/factory.py", line 226, in _make_base_candidate_from_link
+    self._link_candidate_cache[link] = LinkCandidate(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/candidates.py", line 318, in __init__
+    super().__init__(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/candidates.py", line 161, in __init__
+    self.dist = self._prepare()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/candidates.py", line 238, in _prepare
+    dist = self._prepare_distribution()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/candidates.py", line 329, in _prepare_distribution
+    return preparer.prepare_linked_requirement(self._ireq, parallel_builds=True)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/operations/prepare.p
+y", line 543, in prepare_linked_requirement
+    return self._prepare_linked_requirement(req, parallel_builds)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/operations/prepare.p
+y", line 614, in _prepare_linked_requirement
+    local_file = unpack_url(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/operations/prepare.p
+y", line 180, in unpack_url
+    file = get_http_url(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/operations/prepare.p
+y", line 121, in get_http_url
+    from_path, content_type = download(link, temp_dir.path)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/network/download.py"
+, line 195, in __call__
+    self._process_response(download, resp)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/network/download.py"
+, line 212, in _process_response
+    for chunk in chunks:
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/cli/progress_bars.py
+", line 67, in _rich_download_progress_bar
+    for chunk in iterable:
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/network/utils.py", l
+ine 65, in response_chunks
+    for chunk in response.raw.stream(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 622, in stream
+    data = self.read(amt=amt, decode_content=decode_content)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 587, in read
+    raise IncompleteRead(self._fp_bytes_read, self.length_remaining)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/contextlib.py", line 137, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 455, in _error_catcher
+    raise ProtocolError("Connection broken: %r" % e, e)
+pip._vendor.urllib3.exceptions.ProtocolError: ("Connection broken: OSError(28, 'No space left on devi
+ce')", OSError(28, 'No space left on device'))
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ pip install torch==2.0.1 torchvision==0.15.2 torc
+haudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+Looking in indexes: https://download.pytorch.org/whl/cu118
+Collecting torch==2.0.1
+  Downloading https://download.pytorch.org/whl/cu118/torch-2.0.1%2Bcu118-cp39-cp39-linux_x86_64.whl (
+2267.3 MB)
+     ━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━ 1.1/2.3 GB 29.4 MB/s eta 0:00:40
+ERROR: Exception:
+Traceback (most recent call last):
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 438, in _error_catcher
+    yield
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 561, in read
+    data = self._fp_read(amt) if not fp_closed else b""
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 527, in _fp_read
+    return self._fp.read(amt) if amt is not None else self._fp.read()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/cachecontrol/filewrapp
+er.py", line 102, in read
+    self.__buf.write(data)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/tempfile.py", line 494, in func_wrapper
+    return func(*args, **kwargs)
+OSError: [Errno 28] No space left on device
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/cli/base_command.py"
+, line 107, in _run_wrapper
+    status = _inner_run()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/cli/base_command.py"
+, line 98, in _inner_run
+    return self.run(options, args)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/cli/req_command.py",
+ line 85, in wrapper
+    return func(self, options, args)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/commands/install.py"
+, line 388, in run
+    requirement_set = resolver.resolve(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/resolver.py", line 99, in resolve
+    result = self._result = resolver.resolve(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/resolvelib/resolvers/r
+esolution.py", line 601, in resolve
+    state = resolution.resolve(requirements, max_rounds=max_rounds)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/resolvelib/resolvers/r
+esolution.py", line 434, in resolve
+    self._add_to_criteria(self.state.criteria, r, parent=None)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/resolvelib/resolvers/r
+esolution.py", line 150, in _add_to_criteria
+    if not criterion.candidates:
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/resolvelib/structs.py"
+, line 194, in __bool__
+    return bool(self._sequence)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/found_candidates.py", line 165, in __bool__
+    self._bool = any(self)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/found_candidates.py", line 149, in <genexpr>
+    return (c for c in iterator if id(c) not in self._incompatible_ids)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/found_candidates.py", line 39, in _iter_built
+    candidate = func()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/factory.py", line 180, in _make_candidate_from_link
+    base: BaseCandidate | None = self._make_base_candidate_from_link(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/factory.py", line 226, in _make_base_candidate_from_link
+    self._link_candidate_cache[link] = LinkCandidate(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/candidates.py", line 318, in __init__
+    super().__init__(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/candidates.py", line 161, in __init__
+    self.dist = self._prepare()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/candidates.py", line 238, in _prepare
+    dist = self._prepare_distribution()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/resolution/resolveli
+b/candidates.py", line 329, in _prepare_distribution
+    return preparer.prepare_linked_requirement(self._ireq, parallel_builds=True)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/operations/prepare.p
+y", line 543, in prepare_linked_requirement
+    return self._prepare_linked_requirement(req, parallel_builds)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/operations/prepare.p
+y", line 614, in _prepare_linked_requirement
+    local_file = unpack_url(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/operations/prepare.p
+y", line 180, in unpack_url
+    file = get_http_url(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/operations/prepare.p
+y", line 121, in get_http_url
+    from_path, content_type = download(link, temp_dir.path)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/network/download.py"
+, line 195, in __call__
+    self._process_response(download, resp)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/network/download.py"
+, line 212, in _process_response
+    for chunk in chunks:
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/cli/progress_bars.py
+", line 67, in _rich_download_progress_bar
+    for chunk in iterable:
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_internal/network/utils.py", l
+ine 65, in response_chunks
+    for chunk in response.raw.stream(
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 622, in stream
+    data = self.read(amt=amt, decode_content=decode_content)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 587, in read
+    raise IncompleteRead(self._fp_bytes_read, self.length_remaining)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/contextlib.py", line 137, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/pip/_vendor/urllib3/response.py",
+line 455, in _error_catcher
+    raise ProtocolError("Connection broken: %r" % e, e)
+pip._vendor.urllib3.exceptions.ProtocolError: ("Connection broken: OSError(28, 'No space left on devi
+ce')", OSError(28, 'No space left on device'))
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ conda env list
+# conda environments:
+#
+base                     /data/packages/anaconda3
+GRPE                     /home/hane/.conda/envs/GRPE
+data_download            /home/hane/.conda/envs/data_download
+fsdrp                    /home/hane/.conda/envs/fsdrp
+therapi               *  /home/hane/.conda/envs/therapi
+
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$     conda deactivate
+(base) haeun@ubuntu:/data/project/haeun/THERAPI$ conda remove --name fsdrp --all
+
+Remove all packages in environment /home/hane/.conda/envs/fsdrp:
+
+
+## Package Plan ##
+
+  environment location: /home/hane/.conda/envs/fsdrp
+
+
+The following packages will be REMOVED:
+
+  _libgcc_mutex-0.1-main
+  _openmp_mutex-5.1-1_gnu
+  aiohappyeyeballs-2.6.1-pyhd8ed1ab_0
+  aiohttp-3.12.15-py39heb7d2ae_0
+  aiosignal-1.4.0-pyhd8ed1ab_0
+  anyio-4.8.0-pyhd8ed1ab_0
+  argon2-cffi-21.1.0-py39h3811e60_2
+  arrow-1.1.0-py39hf3d152e_0
+  arrow-cpp-19.0.0-h16717c6_5
+  async-lru-2.0.5-pyh29332c3_0
+  async-timeout-5.0.1-pyhd8ed1ab_1
+  attrs-25.3.0-pyh71513ae_0
+  aws-c-auth-0.9.0-hb25bd0a_2
+  aws-c-cal-0.9.2-h3ff94e8_1
+  aws-c-common-0.12.4-hb03c661_0
+  aws-c-compression-0.3.1-h92c474e_6
+  aws-c-event-stream-0.5.6-h4d13e43_1
+  aws-c-http-0.10.4-hbd4fbc6_1
+  aws-c-io-0.21.4-h3eb0749_0
+  aws-c-mqtt-0.13.3-h680d5b3_4
+  aws-c-s3-0.8.7-h3ff94e8_0
+  aws-c-sdkutils-0.2.4-h92c474e_1
+  aws-checksums-0.2.7-h92c474e_2
+  aws-crt-cpp-0.34.0-h7934f7d_0
+  aws-sdk-cpp-1.11.638-hac3f51a_0
+  babel-2.17.0-pyhd8ed1ab_0
+  backcall-0.2.0-pyh9f0ad1d_0
+  beautifulsoup4-4.12.3-pyha770c72_1
+  blas-2.136-openblas
+  blas-devel-3.9.0-36_h1ea3ea9_openblas
+  bleach-6.2.0-pyh29332c3_4
+  bleach-with-css-6.2.0-h82add2a_4
+  brotli-python-1.0.9-py39h5a03fae_7
+  bzip2-1.0.8-h5eee18b_6
+  c-ares-1.34.5-hb9d3cd8_0
+  ca-certificates-2025.1.31-hbcca054_0
+  cached-property-1.5.2-hd8ed1ab_1
+  cached_property-1.5.2-pyha770c72_1
+  cairo-1.18.4-h3394656_0
+  certifi-2025.8.3-pyhd8ed1ab_0
+  cffi-1.17.1-py39h1fdaa30_1
+  charset-normalizer-3.4.3-pyhd8ed1ab_0
+  colorama-0.4.6-pyhd8ed1ab_1
+  cycler-0.12.1-pyhd8ed1ab_1
+  cyrus-sasl-2.1.28-h1110e0f_3
+  datasets-3.6.0-pyhd8ed1ab_0
+  debugpy-1.8.16-py39hbdd6827_0
+  decorator-5.2.1-pyhd8ed1ab_0
+  defusedxml-0.7.1-pyhd8ed1ab_0
+  deprecated-1.2.18-pyhd8ed1ab_0
+  dill-0.3.8-pyhd8ed1ab_0
+  exceptiongroup-1.3.0-pyhd8ed1ab_0
+  expat-2.7.1-h6a678d5_0
+  filelock-3.19.1-pyhd8ed1ab_0
+  font-ttf-dejavu-sans-mono-2.37-hab24e00_0
+  font-ttf-inconsolata-3.000-h77eed37_0
+  font-ttf-source-code-pro-2.038-h77eed37_0
+  font-ttf-ubuntu-0.83-h77eed37_3
+  fontconfig-2.15.0-h7e30c49_1
+  fonts-conda-ecosystem-1-0
+  fonts-conda-forge-1-0
+  fqdn-1.5.1-pyhd8ed1ab_1
+  freetype-2.14.1-ha770c72_0
+  frozenlist-1.7.0-py39h53edacf_0
+  fsspec-2024.12.0-pyhd8ed1ab_0
+  gflags-2.2.2-h5888daf_1005
+  glog-0.5.0-h48cff8f_0
+  greenlet-3.2.4-py39h818bca1_0
+  h11-0.16.0-pyhd8ed1ab_0
+  h2-4.1.0-py39hf3d152e_0
+  hf-xet-1.1.8-py39h84c0859_0
+  hpack-4.1.0-pyhd8ed1ab_0
+  httpcore-1.0.9-pyh29332c3_0
+  httpx-0.28.1-pyhd8ed1ab_0
+  huggingface_hub-0.34.3-pyhd8ed1ab_0
+  hyperframe-6.1.0-pyhd8ed1ab_0
+  icu-75.1-he02047a_0
+  idna-3.10-pyhd8ed1ab_1
+  importlib-metadata-8.7.0-pyhe01879c_1
+  ipykernel-6.14.0-py39hef51801_0
+  ipython-7.33.0-py39hf3d152e_0
+  isoduration-20.11.0-pyhd8ed1ab_1
+  jedi-0.19.2-pyhd8ed1ab_1
+  jinja2-3.1.6-pyhd8ed1ab_0
+  jpeg-9e-h0b41bf4_3
+  json5-0.12.1-pyhd8ed1ab_0
+  jsonpointer-3.0.0-py39hf3d152e_1
+  jsonschema-4.25.1-pyhe01879c_0
+  jsonschema-specifications-2023.7.1-py39h06a4308_0
+  jsonschema-with-format-nongpl-4.25.1-he01879c_0
+  jupyter-lsp-2.2.5-py39h06a4308_0
+  jupyter_client-8.6.3-pyhd8ed1ab_1
+  jupyter_core-5.7.2-py39hf3d152e_0
+  jupyter_events-0.12.0-pyh29332c3_0
+  jupyter_server-2.16.0-py39h06a4308_0
+  jupyter_server_terminals-0.5.3-pyhd8ed1ab_1
+  jupyterlab-4.4.4-pyhd8ed1ab_0
+  jupyterlab_pygments-0.3.0-pyhd8ed1ab_2
+  jupyterlab_server-2.27.3-pyhd8ed1ab_1
+  kiwisolver-1.4.4-py39h6a678d5_0
+  lark-1.2.2-pyhd8ed1ab_1
+  lcms2-2.16-h92b89f2_1
+  ld_impl_linux-64-2.40-h12ee557_0
+  lerc-4.0.0-h0aef613_1
+  libabseil-20250127.0-cxx17_h6a678d5_0
+  libblas-3.9.0-36_h4a7cf45_openblas
+  libboost-1.86.0-hb8260a3_2
+  libboost-python-1.86.0-py39hf59e57a_3
+  libbrotlicommon-1.0.9-h166bdaf_9
+  libbrotlidec-1.0.9-h166bdaf_9
+  libbrotlienc-1.0.9-h166bdaf_9
+  libcblas-3.9.0-36_h0358290_openblas
+  libcurl-8.15.0-hc1efc7f_0
+  libdeflate-1.22-hb9d3cd8_0
+  libev-4.33-hd590300_2
+  libevent-2.1.10-h28343ad_4
+  libexpat-2.7.1-hecca717_0
+  libffi-3.4.4-h6a678d5_1
+  libfreetype-2.14.1-ha770c72_0
+  libfreetype6-2.14.1-h73754d4_0
+  libgcc-15.1.0-h767d61c_5
+  libgcc-ng-15.1.0-h69a702a_5
+  libgfortran-15.1.0-h69a702a_5
+  libgfortran5-15.1.0-hcea5267_5
+  libglib-2.84.2-h37c7471_0
+  libgomp-15.1.0-h767d61c_5
+  libgrpc-1.71.0-h2d74bed_0
+  libiconv-1.18-h3b78370_2
+  libkrb5-1.21.3-h520c7b4_4
+  liblapack-3.9.0-36_h47877c9_openblas
+  liblapacke-3.9.0-36_h6ae95b6_openblas
+  libnghttp2-1.57.0-h2d74bed_0
+  libopenblas-0.3.30-pthreads_h94d23a6_2
+  libpng-1.6.50-h421ea60_1
+  libpq-17.4-h02b6914_2
+  libprotobuf-5.29.3-h501fc15_0
+  librdkit-2024.09.6-h84b0b3c_0
+  libre2-11-2024.07.02-h6a678d5_0
+  libsodium-1.0.18-h36c2ea0_1
+  libssh2-1.11.1-h251f7ec_0
+  libstdcxx-15.1.0-h8f9b012_5
+  libstdcxx-ng-15.1.0-h4852527_5
+  libthrift-0.15.0-h362ad58_1
+  libtiff-4.7.0-hde9077f_0
+  libtorch-2.6.0-cpu_openblas_h70a2a0d_6
+  libuuid-2.41.2-he9a06e4_0
+  libuv-1.51.0-hb03c661_1
+  libwebp-base-1.6.0-hd42ef1d_0
+  libxcb-1.17.0-h9b100fa_0
+  libzlib-1.3.1-hb25bd0a_0
+  lmdb-0.9.31-hd590300_1
+  lz4-c-1.9.4-hcb278e6_0
+  markupsafe-3.0.2-py39h5eee18b_0
+  matplotlib-base-3.4.3-py39h2fa2bec_2
+  matplotlib-inline-0.1.7-pyhd8ed1ab_1
+  mistune-2.0.5-pyhd8ed1ab_0
+  mpmath-1.3.0-pyhd8ed1ab_1
+  multidict-6.6.3-py39h9399b63_0
+  multiprocess-0.70.14-py39hb9d737c_3
+  nbclient-0.10.2-pyhd8ed1ab_0
+  nbconvert-core-7.16.6-pyh29332c3_0
+  nbformat-5.10.4-pyhd8ed1ab_1
+  ncurses-6.5-h7934f7d_0
+  nest-asyncio-1.6.0-pyhd8ed1ab_1
+  networkx-3.2.1-pyhd8ed1ab_0
+  nomkl-1.0-h5ca1d4c_0
+  notebook-shim-0.2.4-pyhd8ed1ab_1
+  numpy-1.26.4-py39h474f0d3_0
+  openblas-0.3.30-pthreads_h6ec200e_2
+  openjpeg-2.5.2-h0d4d230_1
+  openldap-2.6.4-h42fbc30_0
+  openssl-3.0.17-h5eee18b_0
+  opentelemetry-api-1.36.0-pyhd8ed1ab_0
+  orc-2.1.1-hd396ef6_0
+  overrides-7.7.0-pyhd8ed1ab_1
+  packaging-25.0-pyh29332c3_1
+  pandas-2.2.3-py39h3b40f6f_3
+  pandocfilters-1.5.0-pyhd8ed1ab_0
+  parso-0.8.4-py39h06a4308_0
+  pcre2-10.42-hcad00b1_0
+  pexpect-4.9.0-pyhd8ed1ab_1
+  pickleshare-0.7.5-pyhd8ed1ab_1004
+  pillow-11.1.0-py39hac6e08b_1
+  pip-25.2-pyhc872135_0
+  pixman-0.46.4-h54a6638_1
+  platformdirs-4.2.2-pyhd8ed1ab_0
+  prometheus_client-0.20.0-pyhd8ed1ab_0
+  prompt-toolkit-3.0.51-pyha770c72_0
+  propcache-0.3.1-py39h9399b63_0
+  psutil-7.0.0-py39hee96239_0
+  pthread-stubs-0.3-h0ce48e5_1
+  ptyprocess-0.7.0-pyhd8ed1ab_1
+  pyarrow-19.0.0-py39h7934f7d_2
+  pycairo-1.28.0-py39ha09e8ab_0
+  pycparser-2.22-pyh29332c3_1
+  pygments-2.19.2-pyhd8ed1ab_0
+  pyparsing-3.1.4-pyhd8ed1ab_0
+  pysocks-1.7.1-py39hf3d152e_5
+  python-3.9.23-he99959a_0
+  python-dateutil-2.9.0.post0-pyhe01879c_2
+  python-fastjsonschema-2.21.2-pyhe01879c_0
+  python-json-logger-2.0.7-pyhd8ed1ab_0
+  python-tzdata-2025.2-pyhd8ed1ab_0
+  python-xxhash-3.5.0-py39h8cd3c5a_2
+  python_abi-3.9-2_cp39
+  pytorch-2.6.0-cpu_openblas_py39h2faf015_6
+  pytz-2025.2-pyhd8ed1ab_0
+  pyyaml-6.0-py39hb9d737c_4
+  pyzmq-27.1.0-py39hcf8288c_0
+  rdkit-2024.09.6-py39h2709aa1_0
+  re2-2024.07.02-hdb19cb5_0
+  readline-8.3-hc2a1206_0
+  referencing-0.36.2-pyh29332c3_0
+  regex-2024.11.6-py39h5eee18b_0
+  reportlab-4.4.3-py39h06a4308_0
+  requests-2.32.5-pyhd8ed1ab_0
+  rfc3339-validator-0.1.4-pyhd8ed1ab_1
+  rfc3986-validator-0.1.1-pyh9f0ad1d_0
+  rfc3987-syntax-1.1.0-pyhe01879c_1
+  rpds-py-0.22.3-py39h4aa5aa6_0
+  s2n-1.5.14-hdbd6064_0
+  safetensors-0.6.2-py39h2bddf42_0
+  send2trash-1.8.2-py39h06a4308_1
+  setuptools-78.1.1-py39h06a4308_0
+  six-1.17.0-pyhe01879c_1
+  sleef-3.9.0-ha0421bc_0
+  snappy-1.2.2-h03e3b7b_0
+  sniffio-1.3.1-pyhd8ed1ab_1
+  soupsieve-2.5-pyhd8ed1ab_2
+  sqlalchemy-2.0.43-py39hd399759_0
+  sqlite-3.50.2-hb25bd0a_1
+  sympy-1.14.0-pyh04b8f61_5
+  terminado-0.15.0-py39hf3d152e_0
+  tinycss2-1.4.0-pyhd8ed1ab_0
+  tk-8.6.15-h54e0aa7_0
+  tokenizers-0.21.0-py39ha92566c_0
+  tomli-2.2.1-pyhe01879c_2
+  torch-geometric-2.6.1-pyhd8ed1ab_0
+  torch-scatter-2.1.1-py39hbe37449_12
+  tornado-6.5.1-py39h5eee18b_0
+  tqdm-4.67.1-pyhd8ed1ab_1
+  traitlets-5.14.3-pyhd8ed1ab_1
+  transformers-4.55.2-pyhd8ed1ab_0
+  typing-extensions-4.14.1-h4440ef1_0
+  typing_extensions-4.14.1-pyhe01879c_0
+  typing_utils-0.1.0-pyhd8ed1ab_1
+  tzdata-2025b-h04d1e81_0
+  uri-template-1.3.0-pyhd8ed1ab_1
+  urllib3-2.2.1-pyhd8ed1ab_0
+  utf8proc-2.6.1-h5eee18b_1
+  wcwidth-0.1.9-pyh9f0ad1d_0
+  webcolors-24.11.1-pyhd8ed1ab_0
+  webencodings-0.5.1-pyhd8ed1ab_3
+  websocket-client-1.8.0-pyhd8ed1ab_1
+  wheel-0.45.1-py39h06a4308_0
+  wrapt-1.17.3-py39hd399759_0
+  xorg-libice-1.1.2-hb9d3cd8_0
+  xorg-libsm-1.2.6-he73a12e_0
+  xorg-libx11-1.8.12-h9b100fa_1
+  xorg-libxau-1.0.12-h9b100fa_0
+  xorg-libxdmcp-1.1.5-h9b100fa_0
+  xorg-libxext-1.3.6-hb9d3cd8_0
+  xorg-libxrender-0.9.12-hb9d3cd8_0
+  xorg-xorgproto-2024.1-h5eee18b_1
+  xxhash-0.8.3-hb47aa4a_0
+  xz-5.6.4-h5eee18b_1
+  yaml-0.2.5-h7f98852_2
+  yarl-1.20.1-py39h9399b63_0
+  zeromq-4.3.5-h6a678d5_0
+  zipp-3.23.0-pyhd8ed1ab_0
+  zlib-1.3.1-hb25bd0a_0
+  zstd-1.5.7-hb8e6e7a_2
+
+
+Proceed ([y]/n)? y
+
+Preparing transaction: done
+Verifying transaction: done
+Executing transaction: done
+(base) haeun@ubuntu:/data/project/haeun/THERAPI$ rm -rf ~/.cache/*
+(base) haeun@ubuntu:/data/project/haeun/THERAPI$ pip install torch==2.0.1 torchvision==0.15.2 torchau
+dio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+Defaulting to user installation because normal site-packages is not writeable
+Looking in indexes: https://download.pytorch.org/whl/cu118
+WARNING: Keyring is skipped due to an exception: Failed to unlock the collection!
+WARNING: Keyring is skipped due to an exception: Failed to unlock the collection!
+ERROR: Could not find a version that satisfies the requirement torch==2.0.1 (from versions: none)
+ERROR: No matching distribution found for torch==2.0.1
+WARNING: Keyring is skipped due to an exception: Failed to unlock the collection!
+WARNING: Keyring is skipped due to an exception: Failed to unlock the collection!
+(base) haeun@ubuntu:/data/project/haeun/THERAPI$ conda activate therapi
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ pip install torch==2.0.1 torchvision==0.15.2 torc
+haudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
+Looking in indexes: https://download.pytorch.org/whl/cu118
+Collecting torch==2.0.1
+  Downloading https://download.pytorch.org/whl/cu118/torch-2.0.1%2Bcu118-cp39-cp39-linux_x86_64.whl (
+2267.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 GB ?  0:01:51
+Collecting torchvision==0.15.2
+  Downloading https://download.pytorch.org/whl/cu118/torchvision-0.15.2%2Bcu118-cp39-cp39-linux_x86_6
+4.whl (6.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.1/6.1 MB 37.1 MB/s  0:00:00
+Collecting torchaudio==2.0.2
+  Downloading https://download.pytorch.org/whl/cu118/torchaudio-2.0.2%2Bcu118-cp39-cp39-linux_x86_64.
+whl (4.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 53.8 MB/s  0:00:00
+Collecting filelock (from torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/filelock-3.19.1-py3-none-any.whl.metadata (2.1 kB)
+Requirement already satisfied: typing-extensions in /home/hane/.conda/envs/therapi/lib/python3.9/site
+-packages (from torch==2.0.1) (4.15.0)
+Collecting sympy (from torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+Collecting networkx (from torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/networkx-3.5-py3-none-any.whl.metadata (6.3 kB)
+Collecting jinja2 (from torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting triton==2.0.0 (from torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/triton-2.0.0-1-cp39-cp39-manylinux2014_x86_64.manylinu
+x_2_17_x86_64.whl (63.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 63.3/63.3 MB 43.4 MB/s  0:00:01
+Requirement already satisfied: numpy in /home/hane/.conda/envs/therapi/lib/python3.9/site-packages (f
+rom torchvision==0.15.2) (1.26.4)
+Collecting requests (from torchvision==0.15.2)
+  Downloading https://download.pytorch.org/whl/requests-2.28.1-py3-none-any.whl (62 kB)
+Requirement already satisfied: pillow!=8.3.*,>=5.3.0 in /home/hane/.conda/envs/therapi/lib/python3.9/
+site-packages (from torchvision==0.15.2) (11.3.0)
+Collecting cmake (from triton==2.0.0->torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/cmake-3.25.0-py2.py3-none-manylinux_2_17_x86_64.manyli
+nux2014_x86_64.whl (23.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 23.7/23.7 MB 27.6 MB/s  0:00:00
+Collecting lit (from triton==2.0.0->torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/lit-15.0.7.tar.gz (132 kB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting MarkupSafe>=2.0 (from jinja2->torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/MarkupSafe-2.1.5-cp39-cp39-manylinux_2_17_x86_64.manyl
+inux2014_x86_64.whl (25 kB)
+INFO: pip is looking at multiple versions of networkx to determine which version is compatible with o
+ther requirements. This could take a while.
+Collecting networkx (from torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/networkx-3.2.1-py3-none-any.whl.metadata (5.2 kB)
+Collecting charset-normalizer<3,>=2 (from requests->torchvision==0.15.2)
+  Downloading https://download.pytorch.org/whl/charset_normalizer-2.1.1-py3-none-any.whl (39 kB)
+Collecting idna<4,>=2.5 (from requests->torchvision==0.15.2)
+  Downloading https://download.pytorch.org/whl/idna-3.4-py3-none-any.whl (61 kB)
+Collecting urllib3<1.27,>=1.21.1 (from requests->torchvision==0.15.2)
+  Downloading https://download.pytorch.org/whl/urllib3-1.26.13-py2.py3-none-any.whl (140 kB)
+Collecting certifi>=2017.4.17 (from requests->torchvision==0.15.2)
+  Downloading https://download.pytorch.org/whl/certifi-2022.12.7-py3-none-any.whl (155 kB)
+Collecting mpmath<1.4,>=1.1.0 (from sympy->torch==2.0.1)
+  Downloading https://download.pytorch.org/whl/mpmath-1.3.0-py3-none-any.whl (536 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 17.9 MB/s  0:00:00
+Downloading https://download.pytorch.org/whl/filelock-3.19.1-py3-none-any.whl (15 kB)
+Downloading https://download.pytorch.org/whl/jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading https://download.pytorch.org/whl/networkx-3.2.1-py3-none-any.whl (1.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 20.5 MB/s  0:00:00
+Downloading https://download.pytorch.org/whl/sympy-1.14.0-py3-none-any.whl (6.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 25.9 MB/s  0:00:00
+Building wheels for collected packages: lit
+  Building wheel for lit (pyproject.toml) ... done
+  Created wheel for lit: filename=lit-15.0.7-py3-none-any.whl size=89991 sha256=3645efd8eb462f0326306
+e783726433b47547aa2c30e495cd091564612cd07c5
+  Stored in directory: /home/hane/.cache/pip/wheels/8a/25/6d/8f3999d5827188a1f139f7f08b8458b79cc8ab18
+4bc44d3955
+Successfully built lit
+Installing collected packages: mpmath, lit, cmake, urllib3, sympy, networkx, MarkupSafe, idna, filelo
+ck, charset-normalizer, certifi, requests, jinja2, triton, torch, torchvision, torchaudio
+Successfully installed MarkupSafe-2.1.5 certifi-2022.12.7 charset-normalizer-2.1.1 cmake-3.25.0 filel
+ock-3.19.1 idna-3.4 jinja2-3.1.6 lit-15.0.7 mpmath-1.3.0 networkx-3.2.1 requests-2.28.1 sympy-1.14.0
+torch-2.0.1+cu118 torchaudio-2.0.2+cu118 torchvision-0.15.2+cu118 triton-2.0.0 urllib3-1.26.13
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+[00:13:34] Start training HierarchicalTHERAPI_aligner_GDSC_TCGA model
+[00:13:34] random seed with 42
+[00:15:00] Using 1774 common genes
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 328, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 322, in main
+    model = train_hierarchical_aligner(args, config)
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 241, in train_hierarchical_aligner
+    losses = compute_hierarchical_losses(
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 80, in compute_hierarchical_losses
+    output = model.hierarchical_attention_forward(patient_expr, cell_line_exprs)
+  File "/data/project/haeun/THERAPI/models/hierarchical_therapi.py", line 274, in hierarchical_attent
+ion_forward
+    tissue_cell_encs = cell_line_encs[tissue_mask]  # [n_tissue_cells, n_latent]
+IndexError: The shape of the mask [1633] at index 0 does not match the shape of the indexed tensor [1
+049, 128] at index 0
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ git pull
+remote: Enumerating objects: 11, done.
+remote: Counting objects: 100% (11/11), done.
+remote: Compressing objects: 100% (6/6), done.
+remote: Total 11 (delta 5), reused 11 (delta 5), pack-reused 0 (from 0)
+Unpacking objects: 100% (11/11), 8.50 KiB | 2.83 MiB/s, done.
+From https://github.com/hanE111/THERAPI
+   319f832..0fa983a  hierarchical -> origin/hierarchical
+Updating 319f832..0fa983a
+Fast-forward
+ ALL_FIXES_SUMMARY.md                                       | 190 ++++++++++++++++++++++++++++++++++
+ CUDA_COMPATIBILITY_FIX.md                                  | 123 ++++++++++++++++++++++
+ TISSUE_MASK_FIX.md                                         | 114 ++++++++++++++++++++
+ fix_cuda.sh                                                | 104 +++++++++++++++++++
+ hierarchical_utils/__pycache__/data_loader.cpython-311.pyc | Bin 18333 -> 18366 bytes
+ train_hierarchical.py                                      |   5 +-
+ verify_dimensions.py                                       |  87 ++++++++++++++++
+ 7 files changed, 621 insertions(+), 2 deletions(-)
+ create mode 100644 ALL_FIXES_SUMMARY.md
+ create mode 100644 CUDA_COMPATIBILITY_FIX.md
+ create mode 100644 TISSUE_MASK_FIX.md
+ create mode 100755 fix_cuda.sh
+ create mode 100644 verify_dimensions.py
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+[00:21:32] Start training HierarchicalTHERAPI_aligner_GDSC_TCGA model
+[00:21:32] random seed with 42
+[00:22:58] Using 1774 common genes
+/data/project/haeun/THERAPI/src/center_loss.py:35: UserWarning: This overload of addmm_ is deprecated
+:
+        addmm_(Number beta, Number alpha, Tensor mat1, Tensor mat2)
+Consider using one of the following signatures instead:
+        addmm_(Tensor mat1, Tensor mat2, *, Number beta, Number alpha) (Triggered internally at ../to
+rch/csrc/utils/python_arg_parser.cpp:1485.)
+  distmat.addmm_(1, -2, x, self.centers.t())
+/data/project/haeun/THERAPI/train_hierarchical.py:106: UserWarning: Using a target size (torch.Size([
+])) that is different to the input size (torch.Size([1])). This will likely lead to incorrect results
+ due to broadcasting. Please ensure they have the same size.
+  temp_loss = F.mse_loss(model.tissue_router.temperature, torch.tensor(target_temp).to(model.tissue_r
+outer.temperature.device))
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 329, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 323, in main
+    model = train_hierarchical_aligner(args, config)
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 242, in train_hierarchical_aligner
+    losses = compute_hierarchical_losses(
+  File "/data/project/haeun/THERAPI/train_hierarchical.py", line 110, in compute_hierarchical_losses
+    config['loss_weights']['center'] * center_loss +
+KeyError: 'loss_weights'
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ git pull
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 4 (delta 2), reused 4 (delta 2), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 2.15 KiB | 2.15 MiB/s, done.
+From https://github.com/hanE111/THERAPI
+   0fa983a..ec931db  hierarchical -> origin/hierarchical
+Updating 0fa983a..ec931db
+Fast-forward
+ CONFIG_FIX.md         | 141 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ train_hierarchical.py |  22 ++++++++++-
+ 2 files changed, 161 insertions(+), 2 deletions(-)
+ create mode 100644 CONFIG_FIX.md
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+[00:25:30] Start training HierarchicalTHERAPI_aligner_GDSC_TCGA model
+[00:25:30] random seed with 42
+[00:26:56] Using 1774 common genes
+/data/project/haeun/THERAPI/src/center_loss.py:35: UserWarning: This overload of addmm_ is deprecated
+:
+        addmm_(Number beta, Number alpha, Tensor mat1, Tensor mat2)
+Consider using one of the following signatures instead:
+        addmm_(Tensor mat1, Tensor mat2, *, Number beta, Number alpha) (Triggered internally at ../to
+rch/csrc/utils/python_arg_parser.cpp:1485.)
+  distmat.addmm_(1, -2, x, self.centers.t())
+[00:27:00] Epoch 1/200 | Total: 7.7810 | Center: 8.3431 | Routing: 2.6844 | Entropy: 0.8814 | Temp: 0
+.9301
+[00:27:34] Epoch 10/200 | Total: 0.9063 | Center: 0.0069 | Routing: 2.2472 | Entropy: 0.0002 | Temp:
+0.6245
+[00:28:12] Epoch 20/200 | Total: 0.9012 | Center: 0.0029 | Routing: 2.2475 | Entropy: 0.0006 | Temp:
+0.5075
+[00:28:50] Epoch 30/200 | Total: 0.9005 | Center: 0.0020 | Routing: 2.2475 | Entropy: 0.0005 | Temp:
+0.4995
+[00:29:27] Epoch 40/200 | Total: 0.9006 | Center: 0.0022 | Routing: 2.2473 | Entropy: 0.0002 | Temp:
+0.4996
+[00:30:05] Epoch 50/200 | Total: 0.8993 | Center: 0.0005 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.5000
+[00:30:43] Epoch 60/200 | Total: 0.8994 | Center: 0.0006 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.4999
+[00:31:21] Epoch 70/200 | Total: 0.8994 | Center: 0.0006 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.5000
+[00:31:58] Epoch 80/200 | Total: 0.8992 | Center: 0.0003 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.5000
+[00:32:36] Epoch 90/200 | Total: 0.8993 | Center: 0.0006 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.5000
+[00:33:14] Epoch 100/200 | Total: 0.8994 | Center: 0.0007 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:33:51] Epoch 110/200 | Total: 0.8992 | Center: 0.0004 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:34:29] Epoch 120/200 | Total: 0.8993 | Center: 0.0005 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:35:07] Epoch 130/200 | Total: 0.8992 | Center: 0.0004 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:35:45] Epoch 140/200 | Total: 0.8993 | Center: 0.0005 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:36:22] Epoch 150/200 | Total: 0.8999 | Center: 0.0012 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:37:00] Epoch 160/200 | Total: 0.8992 | Center: 0.0004 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:37:37] Epoch 170/200 | Total: 0.8993 | Center: 0.0005 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:38:15] Epoch 180/200 | Total: 0.8995 | Center: 0.0008 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:38:53] Epoch 190/200 | Total: 0.8994 | Center: 0.0007 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:39:30] Epoch 200/200 | Total: 0.8992 | Center: 0.0004 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:39:30] Model saved to ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt
+
+Training completed successfully!
+✓ Aligner training completed
+
+Step 2: Training Drug Response Predictor
+--------------------------------------------------
+[00:39:33] Start training HierarchicalTHERAPI_predictor
+[00:39:33] random seed with 42
+[00:40:58] Loading aligner from ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 348, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 344, in main
+    train_hierarchical_predictor(args, config)
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 129, in train_hierarchical
+_predictor
+    aligner.load_state_dict(aligner_checkpoint['model_state_dict'])
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/module.py", line
+2041, in load_state_dict
+    raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
+RuntimeError: Error(s) in loading state_dict for HierarchicalTHERAPI:
+        size mismatch for tissue_cell_mask: copying a param with shape torch.Size([24, 0]) from check
+point, the shape in current model is torch.Size([24, 1633]).
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ git pull
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 4 (delta 2), reused 4 (delta 2), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 2.47 KiB | 2.47 MiB/s, done.
+From https://github.com/hanE111/THERAPI
+   ec931db..03bd9f5  hierarchical -> origin/hierarchical
+Updating ec931db..03bd9f5
+Fast-forward
+ PREDICTOR_FIX.md                | 141 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ train_hierarchical_predictor.py |  22 +++++++---
+ 2 files changed, 158 insertions(+), 5 deletions(-)
+ create mode 100644 PREDICTOR_FIX.md
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+[00:44:27] Start training HierarchicalTHERAPI_aligner_GDSC_TCGA model
+[00:44:27] random seed with 42
+[00:45:54] Using 1774 common genes
+/data/project/haeun/THERAPI/src/center_loss.py:35: UserWarning: This overload of addmm_ is deprecated
+:
+        addmm_(Number beta, Number alpha, Tensor mat1, Tensor mat2)
+Consider using one of the following signatures instead:
+        addmm_(Tensor mat1, Tensor mat2, *, Number beta, Number alpha) (Triggered internally at ../to
+rch/csrc/utils/python_arg_parser.cpp:1485.)
+  distmat.addmm_(1, -2, x, self.centers.t())
+[00:45:58] Epoch 1/200 | Total: 7.7810 | Center: 8.3431 | Routing: 2.6844 | Entropy: 0.8814 | Temp: 0
+.9301
+[00:46:32] Epoch 10/200 | Total: 0.9063 | Center: 0.0069 | Routing: 2.2472 | Entropy: 0.0002 | Temp:
+0.6245
+[00:47:09] Epoch 20/200 | Total: 0.9012 | Center: 0.0029 | Routing: 2.2475 | Entropy: 0.0006 | Temp:
+0.5075
+[00:47:46] Epoch 30/200 | Total: 0.9005 | Center: 0.0020 | Routing: 2.2475 | Entropy: 0.0005 | Temp:
+0.4995
+[00:48:22] Epoch 40/200 | Total: 0.9006 | Center: 0.0022 | Routing: 2.2473 | Entropy: 0.0002 | Temp:
+0.4996
+[00:48:59] Epoch 50/200 | Total: 0.8993 | Center: 0.0005 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.5000
+[00:49:36] Epoch 60/200 | Total: 0.8994 | Center: 0.0006 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.4999
+[00:50:12] Epoch 70/200 | Total: 0.8994 | Center: 0.0006 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.5000
+[00:50:50] Epoch 80/200 | Total: 0.8992 | Center: 0.0003 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.5000
+[00:51:27] Epoch 90/200 | Total: 0.8993 | Center: 0.0006 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+0.5000
+[00:52:05] Epoch 100/200 | Total: 0.8994 | Center: 0.0007 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:52:42] Epoch 110/200 | Total: 0.8992 | Center: 0.0004 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:53:18] Epoch 120/200 | Total: 0.8993 | Center: 0.0005 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:53:55] Epoch 130/200 | Total: 0.8992 | Center: 0.0004 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:54:32] Epoch 140/200 | Total: 0.8993 | Center: 0.0005 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:55:10] Epoch 150/200 | Total: 0.8999 | Center: 0.0012 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:55:48] Epoch 160/200 | Total: 0.8992 | Center: 0.0004 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:56:25] Epoch 170/200 | Total: 0.8993 | Center: 0.0005 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:57:03] Epoch 180/200 | Total: 0.8995 | Center: 0.0008 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:57:41] Epoch 190/200 | Total: 0.8994 | Center: 0.0007 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:58:18] Epoch 200/200 | Total: 0.8992 | Center: 0.0004 | Routing: 2.2472 | Entropy: 0.0000 | Temp:
+ 0.5000
+[00:58:18] Model saved to ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt
+
+Training completed successfully!
+✓ Aligner training completed
+
+Step 2: Training Drug Response Predictor
+--------------------------------------------------
+[00:58:21] Start training HierarchicalTHERAPI_predictor
+[00:58:21] random seed with 42
+[00:59:46] Loading aligner from ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt
+[00:59:47] Aligner loaded successfully
+[01:00:36] Warning: TRANSACT drug response format needs processing
+[01:00:36] Warning: Perturbation features not found, using zeros
+[01:00:36] Warning: Chemical features not found, using zeros
+[01:00:36] Warning: Rank representation not found, using zeros
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 360, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 356, in main
+    train_hierarchical_predictor(args, config)
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 181, in train_hierarchical
+_predictor
+    raise ValueError("No response label column found")
+ValueError: No response label column found
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ git pull
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 4 (delta 2), reused 4 (delta 2), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 2.88 KiB | 2.88 MiB/s, done.
+From https://github.com/hanE111/THERAPI
+   03bd9f5..981b12f  hierarchical -> origin/hierarchical
+Updating 03bd9f5..981b12f
+Fast-forward
+ TRANSACT_FORMAT_FIX.md          | 144 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ train_hierarchical_predictor.py |  16 ++++++-
+ 2 files changed, 158 insertions(+), 2 deletions(-)
+ create mode 100644 TRANSACT_FORMAT_FIX.md
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+✓ Aligner training completed
+
+Step 2: Training Drug Response Predictor
+--------------------------------------------------
+[01:06:53] Start training HierarchicalTHERAPI_predictor
+[01:06:53] random seed with 42
+[01:08:18] Loading aligner from ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt
+[01:08:19] Aligner loaded successfully
+[01:09:08] Loaded TRANSACT GDSC1 format: (333161, 19)
+[01:09:08] Created binary labels from AUC (threshold=0.8): {0: 237703, 1: 95458}
+[01:09:08] Warning: Perturbation features not found, using zeros
+[01:09:08] Warning: Chemical features not found, using zeros
+[01:09:08] Warning: Rank representation not found, using zeros
+[01:09:08] Computing patient representations...
+[01:09:08] Computed representations shape: (1049, 128)
+[01:09:08] No fold split found, using single training
+[01:09:08] Training fold 1/1
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 372, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 368, in main
+    train_hierarchical_predictor(args, config)
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 289, in train_hierarchical
+_predictor
+    for patient_emb, genef, chemical, resp in train_dataloader:
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/utils/data/dataloader.py", l
+ine 633, in __next__
+    data = self._next_data()
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/utils/data/dataloader.py", l
+ine 677, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/utils/data/_utils/fetch.py",
+ line 51, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/utils/data/_utils/fetch.py",
+ line 51, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/utils/data/dataset.py", line
+ 298, in __getitem__
+    return self.dataset[self.indices[idx]]
+  File "/data/project/haeun/THERAPI/train_hierarchical_predictor.py", line 53, in __getitem__
+    patient_emb = torch.tensor(self.patient_repr[idx], dtype=torch.float32)
+IndexError: index 77916 is out of bounds for axis 0 with size 1049
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ git pull
+remote: Enumerating objects: 4, done.
+remote: Counting objects: 100% (4/4), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 4 (delta 2), reused 4 (delta 2), pack-reused 0 (from 0)
+Unpacking objects: 100% (4/4), 3.34 KiB | 3.34 MiB/s, done.
+From https://github.com/hanE111/THERAPI
+   981b12f..a8647d2  hierarchical -> origin/hierarchical
+Updating 981b12f..a8647d2
+Fast-forward
+ CELL_LINE_ALIGNMENT_FIX.md      | 184 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ train_hierarchical_predictor.py |  39 ++++++++++++-
+ 2 files changed, 222 insertions(+), 1 deletion(-)
+ create mode 100644 CELL_LINE_ALIGNMENT_FIX.md
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+✓ Aligner training completed
+
+Step 2: Training Drug Response Predictor
+--------------------------------------------------
+[01:12:15] Start training HierarchicalTHERAPI_predictor
+[01:12:15] random seed with 42
+[01:13:39] Loading aligner from ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt
+[01:13:40] Aligner loaded successfully
+[01:14:29] Loaded TRANSACT GDSC1 format: (333161, 19)
+[01:14:29] Created binary labels from AUC (threshold=0.8): {0: 237703, 1: 95458}
+[01:14:29] Warning: Perturbation features not found, using zeros
+[01:14:29] Warning: Chemical features not found, using zeros
+[01:14:29] Warning: Rank representation not found, using zeros
+[01:14:29] Computing patient representations...
+[01:14:29] Computed representations shape: (1049, 128)
+[01:14:30] Warning: 333161/333161 cell lines not found in expression data
+[01:14:30] Mapped 333161 drug responses to 1 unique cell lines
+[01:14:30] Aligned representations shape: (333161, 128)
+[01:14:30] No fold split found, using single training
+[01:14:30] Training fold 1/1
+[01:15:00] Epoch 1, Train loss: 0.6028, Valid loss: 332.3924
+[01:15:35] Epoch 2, Train loss: 0.6011, Valid loss: 0.6058
+^[[D[01:16:11] Epoch 3, Train loss: 0.6010, Valid loss: 0.5962
+[01:16:48] Epoch 4, Train loss: 0.6009, Valid loss: 0.5943
+[01:17:20] Epoch 5, Train loss: 0.6009, Valid loss: 0.5929
+[01:17:51] Epoch 6, Train loss: 0.6008, Valid loss: 0.5925
+[01:18:22] Epoch 7, Train loss: 0.6008, Valid loss: 0.5928
+EarlyStopping counter: 1/10
+[01:18:56] Epoch 8, Train loss: 0.6008, Valid loss: 0.5927
+EarlyStopping counter: 2/10
+[01:19:33] Epoch 9, Train loss: 0.6008, Valid loss: 0.5929
+EarlyStopping counter: 3/10
+[01:20:11] Epoch 10, Train loss: 0.6008, Valid loss: 0.5929
+EarlyStopping counter: 4/10
+[01:20:48] Epoch 11, Train loss: 0.6007, Valid loss: 0.5929
+EarlyStopping counter: 5/10
+[01:21:26] Epoch 12, Train loss: 0.6008, Valid loss: 0.5924
+[01:22:04] Epoch 13, Train loss: 0.6007, Valid loss: 0.5930
+EarlyStopping counter: 1/10
+[01:22:41] Epoch 14, Train loss: 0.6007, Valid loss: 0.5929
+EarlyStopping counter: 2/10
+[01:23:17] Epoch 15, Train loss: 0.6007, Valid loss: 0.5923
+[01:23:49] Epoch 16, Train loss: 0.6007, Valid loss: 0.5927
+EarlyStopping counter: 1/10
+[01:24:22] Epoch 17, Train loss: 0.6007, Valid loss: 0.5926
+EarlyStopping counter: 2/10
+[01:25:00] Epoch 18, Train loss: 0.6007, Valid loss: 0.5924
+EarlyStopping counter: 3/10
+[01:25:38] Epoch 19, Train loss: 0.6007, Valid loss: 0.5929
+EarlyStopping counter: 4/10
+[01:26:15] Epoch 20, Train loss: 0.6007, Valid loss: 0.5926
+EarlyStopping counter: 5/10
+[01:26:53] Epoch 21, Train loss: 0.6007, Valid loss: 0.5923
+EarlyStopping counter: 6/10
+[01:27:30] Epoch 22, Train loss: 0.6007, Valid loss: 0.5927
+EarlyStopping counter: 7/10
+[01:28:08] Epoch 23, Train loss: 0.6006, Valid loss: 0.5924
+EarlyStopping counter: 8/10
+[01:28:46] Epoch 24, Train loss: 0.6006, Valid loss: 0.5925
+EarlyStopping counter: 9/10
+[01:29:23] Epoch 25, Train loss: 0.6006, Valid loss: 0.5927
+EarlyStopping counter: 10/10
+[01:29:23] Fold 1 training completed
+[01:29:23] All folds training completed!
+✓ Predictor training completed
+
+Step 3: Testing on TCGA
+--------------------------------------------------
+Testing Hierarchical THERAPI on TCGA
+============================================================
+
+Loading data...
+
+Loading aligner from ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt
+TCGA samples: 11093
+GDSC cell lines: 1049
+Genes: 1774
+Traceback (most recent call last):
+  File "/data/project/haeun/THERAPI/test_hierarchical_TCGA.py", line 295, in <module>
+    main()
+  File "/data/project/haeun/THERAPI/test_hierarchical_TCGA.py", line 291, in main
+    test_hierarchical_tcga(args)
+  File "/data/project/haeun/THERAPI/test_hierarchical_TCGA.py", line 142, in test_hierarchical_tcga
+    aligner.load_state_dict(aligner_checkpoint['model_state_dict'])
+  File "/home/hane/.conda/envs/therapi/lib/python3.9/site-packages/torch/nn/modules/module.py", line
+2041, in load_state_dict
+    raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
+RuntimeError: Error(s) in loading state_dict for HierarchicalTHERAPI:
+        size mismatch for tissue_cell_mask: copying a param with shape torch.Size([24, 0]) from check
+point, the shape in current model is torch.Size([24, 1633]).
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ git pull
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 5 (delta 3), reused 5 (delta 3), pack-reused 0 (from 0)
+Unpacking objects: 100% (5/5), 3.10 KiB | 1.55 MiB/s, done.
+From https://github.com/hanE111/THERAPI
+   a8647d2..420e152  hierarchical -> origin/hierarchical
+Updating a8647d2..420e152
+Fast-forward
+ ALL_TISSUE_MASK_FIXES.md  | 253 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ evaluate_hierarchical.py  |  14 ++--
+ test_hierarchical_TCGA.py |   9 +--
+ 3 files changed, 268 insertions(+), 8 deletions(-)
+ create mode 100644 ALL_TISSUE_MASK_FIXES.md
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$ ./run_hierarchical_pipeline.sh
+==================================================
+  Hierarchical THERAPI - Complete Pipeline
+==================================================
+
+Step 1: Training Hierarchical Aligner (GDSC → TCGA)
+--------------------------------------------------
+✓ Aligner training completed
+
+Step 2: Training Drug Response Predictor
+--------------------------------------------------
+✓ Predictor training completed
+
+Step 3: Testing on TCGA
+--------------------------------------------------
+Testing Hierarchical THERAPI on TCGA
+============================================================
+
+Loading data...
+
+Loading aligner from ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt
+TCGA samples: 11093
+GDSC cell lines: 1049
+Genes: 1774
+Aligner loaded successfully
+
+Computing TCGA patient representations...
+Representations shape: (11093, 128)
+Drug response records: 2572
+Warning: Rank representation not found
+Warning: Perturbation not found, using representations
+Warning: Chemical features not found
+Error: No response label column found
+✓ TCGA testing completed
+
+Step 4: Advanced Evaluation
+--------------------------------------------------
+Using device: cuda:0
+
+Loading model from ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt...
+
+Loading TCGA test data...
+
+============================================================
+EVALUATION RESULTS
+============================================================
+
+1. Tissue Routing Accuracy
+------------------------------------------------------------
+Routing Accuracy: 0.00%
+Samples Analyzed: 0
+
+2. Computational Efficiency
+------------------------------------------------------------
+Average inference time: 28.68 ms
+
+============================================================
+Evaluation complete!
+Results saved to output/
+✓ Advanced evaluation completed
+
+Optional: Testing on PDX
+--------------------------------------------------
+Using device: cuda:0
+
+Loading model from ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt...
+
+Loading PDX test data...
+
+============================================================
+EVALUATION RESULTS
+============================================================
+
+1. Tissue Routing Accuracy
+------------------------------------------------------------
+Warning: No tissue info available for routing analysis
+
+2. Computational Efficiency
+------------------------------------------------------------
+Average inference time: 26.57 ms
+
+============================================================
+Evaluation complete!
+Results saved to output/
+✓ PDX evaluation completed
+
+==================================================
+  Pipeline Completed Successfully!
+==================================================
+
+Output files:
+  - ckpts/HierarchicalTHERAPI_aligner_GDSC_TCGA.pt
+  - ckpts/HierarchicalTHERAPI_predictor_CV*.pt
+  - output/HierarchicalTHERAPI_test_TCGA.csv
+  - output/tissue_routing_confusion_TCGA.csv
+  - log/*.log
+
+Next steps:
+  1. Review results in output/
+  2. Run analysis notebook: jupyter notebook notebooks/tissue_routing_analysis.ipynb
+  3. Run ablation studies (see QUICK_START.md)
+
+(therapi) haeun@ubuntu:/data/project/haeun/THERAPI$

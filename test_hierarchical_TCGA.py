@@ -226,6 +226,23 @@ def test_hierarchical_tcga(args):
         print("Warning: Chemical features not found, using zeros")
         tcga_comp = np.zeros((len(tcga_resp), 2048))
 
+    # Use fixed dimensions that match training
+    # During training, the predictor was trained with:
+    # - Rank features: 100 dimensions (all zeros)
+    # - Chemical features: 2048 dimensions (all zeros)
+    # We must use the SAME dimensions during testing
+    TRAINING_RANK_DIM = 100
+    TRAINING_CHEM_DIM = 2048
+
+    print("Using feature dimensions matching training:")
+    tcga_rank = np.zeros((len(tcga_resp), TRAINING_RANK_DIM), dtype=np.float32)
+    tcga_comp = np.zeros((len(tcga_resp), TRAINING_CHEM_DIM), dtype=np.float32)
+    tcga_pert = np.zeros((len(tcga_resp), 128), dtype=np.float32)  # Match patient repr dim
+
+    print(f"  Rank features: {tcga_rank.shape} (zeros, as in training)")
+    print(f"  Chemical features: {tcga_comp.shape} (zeros, as in training)")
+    print(f"  Perturbation features: {tcga_pert.shape}")
+
     # Get labels
     if 'Label' in tcga_resp.columns:
         labels = tcga_resp['Label'].values
@@ -253,8 +270,8 @@ def test_hierarchical_tcga(args):
 
         predictor = HierarchicalResponsePredictor(
             emb_dim=aligner_config.get('latent_dim', 128),
-            genef_dim=tcga_rank.shape[1],
-            chemical_dim=tcga_comp.shape[1],
+            genef_dim=TRAINING_RANK_DIM,     # Use constant: 100,
+            chemical_dim=TRAINING_CHEM_DIM,   # Use constant: 2048,
             hidden_dim1=256,
             hidden_dim2=128,
             output_dim=1

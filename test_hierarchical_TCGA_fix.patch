@@ -1,0 +1,74 @@
+--- test_hierarchical_TCGA.py.original
++++ test_hierarchical_TCGA.py.fixed
+@@ -189,40 +189,21 @@
+
+     print(f"Drug response records: {len(tcga_resp)}")
+
+-    # Load features - check both data_therapi and data directories
+-    # Try data_therapi first (original THERAPI format)
+-    rank_path = os.path.join(os.path.dirname(args.data_dir), 'data_therapi/TCGA_rankrepresentation.csv')
+-    pert_path = os.path.join(os.path.dirname(args.data_dir), 'data_therapi/TCGA_perturbatio_float16.npy')  # Note: typo in original filename
+-    comp_path = os.path.join(os.path.dirname(args.data_dir), 'data_therapi/TCGA_perturbation_compound_float16.npy')
+-
+-    # Fallback to TRANSACT structure
+-    if not os.path.exists(rank_path):
+-        rank_path = os.path.join(args.data_dir, 'TCGA/TCGA_rankrepresentation.csv')
+-    if not os.path.exists(pert_path):
+-        pert_path = os.path.join(args.data_dir, 'TCGA/TCGA_perturbation_float16.npy')
+-    if not os.path.exists(comp_path):
+-        comp_path = os.path.join(args.data_dir, 'TCGA/TCGA_perturbation_compound_float16.npy')
+-
+-    if os.path.exists(rank_path):
+-        tcga_rank = pd.read_csv(rank_path, index_col=0).values
+-        print(f"Loaded rank representation: {tcga_rank.shape}")
+-    else:
+-        print("Warning: Rank representation not found, using zeros")
+-        tcga_rank = np.zeros((len(tcga_resp), 100))
+-
+-    if os.path.exists(pert_path):
+-        tcga_pert = np.load(pert_path).astype(np.float32)
+-        print(f"Loaded perturbation features: {tcga_pert.shape}")
+-    else:
+-        print("Warning: Perturbation not found, using patient representations")
+-        # Use patient representations instead (they're already computed)
+-        # We need to align them to drug responses like we did in predictor training
+-        tcga_pert = tcga_representations
+-
+-    if os.path.exists(comp_path):
+-        tcga_comp = np.load(comp_path).astype(np.float32)
+-        print(f"Loaded chemical features: {tcga_comp.shape}")
+-    else:
+-        print("Warning: Chemical features not found, using zeros")
+-        tcga_comp = np.zeros((len(tcga_resp), 2048))
++    # Use fixed dimensions that match training
++    # During training, the predictor was trained with:
++    # - Rank features: 100 dimensions (all zeros)
++    # - Chemical features: 2048 dimensions (all zeros)
++    # We must use the SAME dimensions during testing
++    TRAINING_RANK_DIM = 100
++    TRAINING_CHEM_DIM = 2048
++
++    print("\nUsing feature dimensions matching training:")
++    tcga_rank = np.zeros((len(tcga_resp), TRAINING_RANK_DIM), dtype=np.float32)
++    tcga_comp = np.zeros((len(tcga_resp), TRAINING_CHEM_DIM), dtype=np.float32)
++    tcga_pert = np.zeros((len(tcga_resp), 128), dtype=np.float32)  # Match patient repr dim
++
++    print(f"  Rank features: {tcga_rank.shape} (zeros, as in training)")
++    print(f"  Chemical features: {tcga_comp.shape} (zeros, as in training)")
++    print(f"  Perturbation features: {tcga_pert.shape}")
+
+     # Get labels
+     if 'Label' in tcga_resp.columns:
+@@ -241,9 +222,9 @@
+     for fold in range(n_folds):
+         predictor = HierarchicalResponsePredictor(
+             emb_dim=128,
+-            genef_dim=tcga_rank.shape[1],
+-            chemical_dim=tcga_comp.shape[1],
+-            hidden_dim1=256,
++            genef_dim=TRAINING_RANK_DIM,     # Use constant: 100
++            chemical_dim=TRAINING_CHEM_DIM,   # Use constant: 2048
++            hidden_dim1=256,
+             hidden_dim2=128,
+             output_dim=1,
+             dropout=0.1

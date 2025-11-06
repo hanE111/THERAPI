@@ -7,10 +7,33 @@ across different sources for Hierarchical THERAPI.
 import os
 import pandas as pd
 import pickle
+import gzip
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from typing import Dict, List, Tuple, Optional
 import warnings
+
+
+def load_pickle_file(filepath: str):
+    """
+    Load pickle file, handling both compressed and uncompressed formats.
+
+    Args:
+        filepath: Path to pickle file
+
+    Returns:
+        Unpickled data
+    """
+    # Try gzip-compressed first (check magic number)
+    with open(filepath, 'rb') as f:
+        magic = f.read(2)
+        f.seek(0)
+
+        if magic == b'\x1f\x8b':  # Gzip magic number
+            with gzip.open(filepath, 'rb') as gz:
+                return pickle.load(gz)
+        else:
+            return pickle.load(f)
 
 
 class TransactDataLoader:
@@ -59,8 +82,7 @@ class TransactDataLoader:
         # Load expression data
         expr_path = os.path.join(gdsc_dir, 'rnaseq/GDSC_rnaseq_data.pkl')
         if os.path.exists(expr_path):
-            with open(expr_path, 'rb') as f:
-                gdsc_expr = pickle.load(f)
+            gdsc_expr = load_pickle_file(expr_path)
         else:
             # Fallback to CSV if pickle not available
             expr_csv_path = os.path.join(gdsc_dir, 'GDSC_gex.csv')
@@ -151,8 +173,7 @@ class TransactDataLoader:
         # Load expression
         expr_path = os.path.join(tcga_dir, 'rnaseq/TCGA_rnaseq_data.pkl')
         if os.path.exists(expr_path):
-            with open(expr_path, 'rb') as f:
-                tcga_expr = pickle.load(f)
+            tcga_expr = load_pickle_file(expr_path)
         else:
             # Fallback to CSV
             expr_csv_path = os.path.join(tcga_dir, 'TCGA_unlabeled_gex.csv')
@@ -164,8 +185,7 @@ class TransactDataLoader:
         # Load sample annotations
         annot_path = os.path.join(tcga_dir, 'rnaseq/TCGA_rnaseq_sample_annot.pkl')
         if os.path.exists(annot_path):
-            with open(annot_path, 'rb') as f:
-                sample_annot = pickle.load(f)
+            sample_annot = load_pickle_file(annot_path)
         else:
             sample_annot = None
             warnings.warn("TCGA sample annotations not found")
@@ -186,12 +206,12 @@ class TransactDataLoader:
         # Load tissue types
         tissue_path = os.path.join(tcga_dir, 'pancancer_sample_spec.csv')
         if os.path.exists(tissue_path):
-            tissue_info = pd.read_csv(tissue_path)
+            tissue_info = pd.read_csv(tissue_path, low_memory=False)
         else:
             # Fallback to info file
             tissue_path = os.path.join(tcga_dir, 'TCGA_unlabeled_info.csv')
             if os.path.exists(tissue_path):
-                tissue_info = pd.read_csv(tissue_path)
+                tissue_info = pd.read_csv(tissue_path, low_memory=False)
             else:
                 warnings.warn("TCGA tissue info not found")
                 tissue_info = pd.DataFrame()
@@ -222,8 +242,7 @@ class TransactDataLoader:
         # Load expression
         expr_path = os.path.join(pdx_dir, 'fpkm/PDXE_fpkm_data.pkl')
         if os.path.exists(expr_path):
-            with open(expr_path, 'rb') as f:
-                pdx_expr = pickle.load(f)
+            pdx_expr = load_pickle_file(expr_path)
         else:
             warnings.warn(f"PDX expression data not found at {expr_path}")
             pdx_expr = None
@@ -281,10 +300,19 @@ class TransactDataLoader:
         Returns:
             List of common gene names/IDs
         """
-        if self.cancer_genes is not None and 'gene_symbol' in self.cancer_genes.columns:
-            common_genes = set(self.cancer_genes['gene_symbol'])
-        elif self.cancer_genes is not None:
-            common_genes = set(self.cancer_genes.iloc[:, 0])
+        # Try multiple common column names for cancer genes
+        if self.cancer_genes is not None:
+            gene_col = None
+            for col_name in ['Hugo', 'gene_symbol', 'gene', 'symbol', 'Gene', 'SYMBOL']:
+                if col_name in self.cancer_genes.columns:
+                    gene_col = col_name
+                    break
+
+            if gene_col:
+                common_genes = set(self.cancer_genes[gene_col])
+            else:
+                # Fallback to first column if no recognized column name
+                common_genes = set(self.cancer_genes.iloc[:, 0])
         else:
             # If no cancer genes provided, use intersection of all datasets
             common_genes = None

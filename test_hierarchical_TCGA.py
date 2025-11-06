@@ -126,10 +126,11 @@ def test_hierarchical_tcga(args):
     print(f"GDSC cell lines: {gdsc_expr.shape[0]}")
     print(f"Genes: {tcga_expr.shape[1]}")
 
-    # Initialize aligner
-    tissue_cell_mask, _ = tissue_mapper.create_cell_line_tissue_matrix(
-        gdsc_data['tissue_mapping']
-    )
+    # Initialize aligner - filter tissue mapping to match expression data
+    source_tissues_filtered = {idx: gdsc_data['tissue_mapping'][idx]
+                              for idx in gdsc_expr.index
+                              if idx in gdsc_data['tissue_mapping']}
+    tissue_cell_mask, _ = tissue_mapper.create_cell_line_tissue_matrix(source_tissues_filtered)
     tissue_cell_mask_tensor = torch.tensor(tissue_cell_mask, dtype=torch.float32)
 
     aligner = HierarchicalTHERAPI(
@@ -154,38 +155,75 @@ def test_hierarchical_tcga(args):
     resp_path = os.path.join(args.data_dir, 'TCGA/response/response.csv')
     if os.path.exists(resp_path):
         tcga_resp = pd.read_csv(resp_path)
+        print(f"Loaded TCGA TRANSACT format: {tcga_resp.shape}")
+
+        # TRANSACT TCGA format uses 'measure_of_response' column
+        # Values: 'Clinical Progressive Disease', 'Stable Disease', 'Partial Response', 'Complete Response'
+        if 'measure_of_response' in tcga_resp.columns:
+            # Map clinical responses to binary labels
+            # Sensitive (1): Complete Response, Partial Response, Stable Disease
+            # Resistant (0): Clinical Progressive Disease
+            response_mapping = {
+                'Complete Response': 1,
+                'Partial Response': 1,
+                'Stable Disease': 1,
+                'Clinical Progressive Disease': 0,
+                'Progressive Disease': 0,
+                'Clinical Partial Response': 1,
+                'Clinical Complete Response': 1,
+                'Clinical Stable Disease': 1
+            }
+            tcga_resp['Label'] = tcga_resp['measure_of_response'].map(response_mapping)
+            # Fill any unmapped values with 0 (resistant)
+            tcga_resp['Label'] = tcga_resp['Label'].fillna(0).astype(int)
+            print(f"Created binary labels from measure_of_response: {tcga_resp['Label'].value_counts().to_dict()}")
     else:
         # Fallback to THERAPI format
         resp_path = os.path.join(args.data_dir, 'TCGA/TCGA_Drug_SMILES_Response.csv')
         if os.path.exists(resp_path):
             tcga_resp = pd.read_csv(resp_path)
+            print(f"Loaded TCGA THERAPI format: {tcga_resp.shape}")
         else:
             print("Error: No TCGA drug response data found")
             return None
 
     print(f"Drug response records: {len(tcga_resp)}")
 
-    # Load features
-    rank_path = os.path.join(args.data_dir, 'TCGA/TCGA_rankrepresentation.csv')
-    pert_path = os.path.join(args.data_dir, 'TCGA/TCGA_perturbation_float16.npy')
-    comp_path = os.path.join(args.data_dir, 'TCGA/TCGA_perturbation_compound_float16.npy')
+    # Load features - check both data_therapi and data directories
+    # Try data_therapi first (original THERAPI format)
+    rank_path = os.path.join(os.path.dirname(args.data_dir), 'data_therapi/TCGA_rankrepresentation.csv')
+    pert_path = os.path.join(os.path.dirname(args.data_dir), 'data_therapi/TCGA_perturbatio_float16.npy')  # Note: typo in original filename
+    comp_path = os.path.join(os.path.dirname(args.data_dir), 'data_therapi/TCGA_perturbation_compound_float16.npy')
+
+    # Fallback to TRANSACT structure
+    if not os.path.exists(rank_path):
+        rank_path = os.path.join(args.data_dir, 'TCGA/TCGA_rankrepresentation.csv')
+    if not os.path.exists(pert_path):
+        pert_path = os.path.join(args.data_dir, 'TCGA/TCGA_perturbation_float16.npy')
+    if not os.path.exists(comp_path):
+        comp_path = os.path.join(args.data_dir, 'TCGA/TCGA_perturbation_compound_float16.npy')
 
     if os.path.exists(rank_path):
         tcga_rank = pd.read_csv(rank_path, index_col=0).values
+        print(f"Loaded rank representation: {tcga_rank.shape}")
     else:
-        print("Warning: Rank representation not found")
+        print("Warning: Rank representation not found, using zeros")
         tcga_rank = np.zeros((len(tcga_resp), 100))
 
     if os.path.exists(pert_path):
         tcga_pert = np.load(pert_path).astype(np.float32)
+        print(f"Loaded perturbation features: {tcga_pert.shape}")
     else:
-        print("Warning: Perturbation not found, using representations")
+        print("Warning: Perturbation not found, using patient representations")
+        # Use patient representations instead (they're already computed)
+        # We need to align them to drug responses like we did in predictor training
         tcga_pert = tcga_representations
 
     if os.path.exists(comp_path):
         tcga_comp = np.load(comp_path).astype(np.float32)
+        print(f"Loaded chemical features: {tcga_comp.shape}")
     else:
-        print("Warning: Chemical features not found")
+        print("Warning: Chemical features not found, using zeros")
         tcga_comp = np.zeros((len(tcga_resp), 2048))
 
     # Get labels

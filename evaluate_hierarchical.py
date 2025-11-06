@@ -337,10 +337,16 @@ def main():
         cell_line_expr = torch.tensor(gdsc_data['expression'].values, dtype=torch.float32)
         test_expr = test_data['expression']
 
-    # Recreate tissue cell mask
-    tissue_cell_mask, _ = tissue_mapper.create_cell_line_tissue_matrix(
-        gdsc_data['tissue_mapping']
-    )
+    # Recreate tissue cell mask - filter to match expression data
+    if common_genes:
+        gdsc_expr_idx = gdsc_data['expression'][common_genes].index
+    else:
+        gdsc_expr_idx = gdsc_data['expression'].index
+
+    source_tissues_filtered = {idx: gdsc_data['tissue_mapping'][idx]
+                              for idx in gdsc_expr_idx
+                              if idx in gdsc_data['tissue_mapping']}
+    tissue_cell_mask, _ = tissue_mapper.create_cell_line_tissue_matrix(source_tissues_filtered)
     tissue_cell_mask_tensor = torch.tensor(tissue_cell_mask, dtype=torch.float32)
 
     # Initialize model

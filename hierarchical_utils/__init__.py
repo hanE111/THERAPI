@@ -8,12 +8,13 @@ This package contains utilities for:
 Note: This package is named 'hierarchical_utils' to avoid conflict with src/utils.py
 """
 
-from .data_loader import TransactDataLoader, create_perturbation_features
+from .data_loader import TransactDataLoader, create_perturbation_features, load_pickle_file
 from .tissue_mapping import TissueMapper, HierarchicalTissueEncoder
 
 __all__ = [
     'TransactDataLoader',
     'create_perturbation_features',
+    'load_pickle_file',
     'TissueMapper',
     'HierarchicalTissueEncoder',
 ]

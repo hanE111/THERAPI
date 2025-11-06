@@ -113,10 +113,11 @@ def train_hierarchical_predictor(args, config):
     else:
         gdsc_expr = gdsc_data['expression']
 
-    # Initialize aligner
-    tissue_cell_mask, _ = tissue_mapper.create_cell_line_tissue_matrix(
-        gdsc_data['tissue_mapping']
-    )
+    # Initialize aligner - filter tissue mapping to match expression data
+    source_tissues_filtered = {idx: gdsc_data['tissue_mapping'][idx]
+                              for idx in gdsc_expr.index
+                              if idx in gdsc_data['tissue_mapping']}
+    tissue_cell_mask, _ = tissue_mapper.create_cell_line_tissue_matrix(source_tissues_filtered)
     tissue_cell_mask_tensor = torch.tensor(tissue_cell_mask, dtype=torch.float32)
 
     aligner = HierarchicalTHERAPI(
@@ -134,13 +135,25 @@ def train_hierarchical_predictor(args, config):
     resp_path = os.path.join(args.data_dir, 'GDSC/response/GDSC1_fitted_dose_response_27Oct23.xlsx')
     if os.path.exists(resp_path):
         drug_response = pd.read_excel(resp_path)
-        # TODO: Process TRANSACT format drug response
-        logger("Warning: TRANSACT drug response format needs processing")
+        logger(f"Loaded TRANSACT GDSC1 format: {drug_response.shape}")
+
+        # TRANSACT format has: CELL_LINE_NAME, DRUG_NAME, AUC, LN_IC50, etc.
+        # Convert to binary response: sensitive (AUC < 0.8) vs resistant (AUC >= 0.8)
+        # Or use continuous AUC values directly
+        if 'AUC' in drug_response.columns:
+            # Binarize AUC: lower AUC = more sensitive (label=1), higher AUC = resistant (label=0)
+            drug_response['Label'] = (drug_response['AUC'] < 0.8).astype(int)
+            logger(f"Created binary labels from AUC (threshold=0.8): {drug_response['Label'].value_counts().to_dict()}")
+        elif 'LN_IC50' in drug_response.columns:
+            # Use LN_IC50: lower value = more sensitive
+            drug_response['Label'] = (drug_response['LN_IC50'] < drug_response['LN_IC50'].median()).astype(int)
+            logger(f"Created binary labels from LN_IC50 (median split)")
     else:
         # Fallback to original THERAPI format
         resp_path = os.path.join(args.data_dir, 'GDSC/GDSC_Drug_SMILES_Response.csv')
         if os.path.exists(resp_path):
             drug_response = pd.read_csv(resp_path)
+            logger(f"Loaded original THERAPI format: {drug_response.shape}")
         else:
             raise FileNotFoundError("No drug response data found")
 
@@ -186,9 +199,46 @@ def train_hierarchical_predictor(args, config):
     )
     logger(f'Computed representations shape: {patient_representations.shape}')
 
+    # Map cell lines to their representations
+    # Create a mapping from cell line names to representation indices
+    cell_line_to_repr_idx = {cell_line: idx for idx, cell_line in enumerate(gdsc_expr.index)}
+
+    # For each drug response entry, find the corresponding cell line representation
+    if 'CELL_LINE_NAME' in drug_response.columns:
+        cell_line_col = 'CELL_LINE_NAME'
+    elif 'SANGER_MODEL_ID' in drug_response.columns:
+        cell_line_col = 'SANGER_MODEL_ID'
+    elif 'COSMIC_ID' in drug_response.columns:
+        cell_line_col = 'COSMIC_ID'
+    else:
+        logger("Warning: No cell line identifier found, assuming order matches")
+        cell_line_indices = np.arange(len(drug_response)) % len(patient_representations)
+
+    if cell_line_col in drug_response.columns:
+        # Map each drug response to its cell line representation
+        cell_line_indices = []
+        missing_count = 0
+        for cell_line in drug_response[cell_line_col]:
+            if cell_line in cell_line_to_repr_idx:
+                cell_line_indices.append(cell_line_to_repr_idx[cell_line])
+            else:
+                # If cell line not found, use first representation (fallback)
+                cell_line_indices.append(0)
+                missing_count += 1
+
+        cell_line_indices = np.array(cell_line_indices)
+        if missing_count > 0:
+            logger(f"Warning: {missing_count}/{len(drug_response)} cell lines not found in expression data")
+        logger(f"Mapped {len(drug_response)} drug responses to {len(np.unique(cell_line_indices))} unique cell lines")
+
+    # Expand patient representations to match drug response data
+    # Each drug response gets the representation of its corresponding cell line
+    aligned_patient_repr = patient_representations[cell_line_indices]
+    logger(f'Aligned representations shape: {aligned_patient_repr.shape}')
+
     # Create dataset
     dataset = HierarchicalDrugDataset(
-        patient_representations,
+        aligned_patient_repr,
         gdsc_rank,
         gdsc_comp,
         labels
@@ -329,7 +379,18 @@ def main():
     # Load config
     if os.path.exists(args.config):
         with open(args.config, 'r') as f:
-            config = yaml.safe_load(f)
+            config_raw = yaml.safe_load(f)
+
+        # Flatten nested config for easier access
+        config = {
+            'batch_size': config_raw.get('training', {}).get('batch_size', 512),
+            'learning_rate': config_raw.get('training', {}).get('learning_rate', 1e-3),
+            'predictor': config_raw.get('predictor', {
+                'hidden_dim1': 256,
+                'hidden_dim2': 128,
+                'dropout': 0.1
+            })
+        }
     else:
         config = {
             'batch_size': 512,

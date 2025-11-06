@@ -103,7 +103,8 @@ def compute_hierarchical_losses(model, patient_expr, cell_line_exprs,
 
     # 6. Temperature regularization (anneal towards target value)
     target_temp = config.get('target_temperature', 0.5)
-    temp_loss = F.mse_loss(model.tissue_router.temperature, torch.tensor(target_temp).to(model.tissue_router.temperature.device))
+    target_temp_tensor = torch.tensor([target_temp], dtype=model.tissue_router.temperature.dtype).to(model.tissue_router.temperature.device)
+    temp_loss = F.mse_loss(model.tissue_router.temperature, target_temp_tensor)
 
     # Combine losses
     total_loss = (
@@ -181,8 +182,9 @@ def train_hierarchical_aligner(args, config):
     target_tissue_labels = [tissue_mapper.get_tissue_idx(target_tissues.get(idx, 'other'))
                            for idx in target_expr.index]
 
-    # Create tissue-cell line mask
-    tissue_cell_mask, tissue_to_idx = tissue_mapper.create_cell_line_tissue_matrix(source_tissues)
+    # Create tissue-cell line mask - filter to only cell lines in expression data
+    source_tissues_filtered = {idx: source_tissues[idx] for idx in source_expr.index if idx in source_tissues}
+    tissue_cell_mask, tissue_to_idx = tissue_mapper.create_cell_line_tissue_matrix(source_tissues_filtered)
     tissue_cell_mask_tensor = torch.tensor(tissue_cell_mask, dtype=torch.float32)
 
     # Create datasets
@@ -298,7 +300,24 @@ def main():
     # Load config
     if os.path.exists(args.config):
         with open(args.config, 'r') as f:
-            config = yaml.safe_load(f)
+            config_raw = yaml.safe_load(f)
+
+        # Flatten nested config for easier access
+        config = {
+            'batch_size': config_raw.get('training', {}).get('batch_size', 128),
+            'latent_dim': config_raw.get('model', {}).get('latent_dim', 128),
+            'learning_rate': config_raw.get('training', {}).get('learning_rate', 1e-3),
+            'n_epochs': config_raw.get('training', {}).get('n_epochs', 200),
+            'routing_strategy': config_raw.get('model', {}).get('routing_strategy', 'gumbel'),
+            'target_temperature': config_raw.get('training', {}).get('target_temperature', 0.5),
+            'loss_weights': config_raw.get('training', {}).get('loss_weights', {
+                'center': 0.8,
+                'routing': 0.4,
+                'entropy': 0.2,
+                'diversity': 0.1,
+                'temperature': 0.1
+            })
+        }
     else:
         # Default config
         config = {
